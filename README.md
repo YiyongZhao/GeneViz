@@ -18,7 +18,6 @@
 > Pypi: https://pypi.org/project/GeneViz
 > Github: https://github.com/YiyongZhao/GeneViz
 > License: MIT license | Release Date: 2026-3
-> Contact: Yiyong Zhao (yiyong.zhao@yale.edu)
 
 ---
 
