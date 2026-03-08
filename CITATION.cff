@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use GeneViz, please cite it as below."
+type: software
+title: "GeneViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species"
+version: 1.0.0
+date-released: "2026-03-01"
+license: MIT
+repository-code: "https://github.com/YiyongZhao/GeneViz"
+authors:
+  - family-names: Zhao
+    given-names: Yiyong
+    email: yiyong.zhao@yale.edu
+    orcid: "https://orcid.org/0000-0002-5823-2926"
+    affiliation: Yale University

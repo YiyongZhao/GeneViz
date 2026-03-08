@@ -1,0 +1,14 @@
+name: GeneViz
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8,<3.13
+  - pip
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib>=3.5
+  - biopython
+  - pip:
+      - GeneViz

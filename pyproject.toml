@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "GeneViz"
+version = "1.0.0"
+description = "A user-friendly toolkit for visualizing pairwise genomic microsynteny across any species"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Yiyong Zhao", email = "yiyong.zhao@yale.edu" }
+]
+keywords = ["genomics", "synteny", "microsynteny", "gene duplication", "visualization", "bioinformatics"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+requires-python = ">=3.8,<3.13"
+dependencies = [
+  "numpy",
+  "pandas",
+  "scipy",
+  "matplotlib>=3.5",
+  "biopython",
+]
+
+[project.scripts]
+GeneViz = "geneviz.GeneViz:main"
+
+[project.urls]
+Homepage = "https://github.com/YiyongZhao/GeneViz"
+Issues = "https://github.com/YiyongZhao/GeneViz/issues"
+PyPI = "https://pypi.org/project/GeneViz"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["geneviz*"]
