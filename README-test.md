@@ -124,3 +124,6 @@ If the package is uploaded to PyPI:
 pip install GeneViz
 genevis --help
 ```
+## 📁 Input File Formats
+GeneViz requires several input files. All are plain text; please follow the exact formats.
+### 1. Gene pair specification
