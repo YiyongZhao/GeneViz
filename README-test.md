@@ -94,7 +94,7 @@ conda install -c bioconda samtools blast
 ```
 or via your system package manager (e.g., apt-get install samtools ncbi-blast+ on Ubuntu).
 ## 🛠 Installation
-Option 1: Direct script usage (simplest)
+### Option 1: Direct script usage (simplest)
 
 1.Download the genevis.py script from the GitHub repository.
 
@@ -107,4 +107,20 @@ Option 1: Direct script usage (simplest)
 python Geneviz.py --help
 ```
 
-Option 2: Install via pip (from GitHub)
+### Option 2: Install via pip (from GitHub)
+Clone the repository and install in editable mode (this makes the genevis command available):
+```bash
+git clone https://github.com/yourusername/GeneViz.git
+cd GeneViz
+pip install -e .
+```
+Now you can run genevis from anywhere:
+```bash
+Geneviz --help
+```
+### Option 3: Install via pip (from PyPI)
+If the package is uploaded to PyPI:
+```bash
+pip install GeneViz
+genevis --help
+```
