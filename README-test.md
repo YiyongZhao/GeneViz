@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
-> **GitHub**: https://github.com/yourusername/GeneViz  
+> **GitHub**: https://github.com/yiyongzhao/GeneViz  
 > **License**: MIT | **Release Date**: 2026-03-12
 
 ---
@@ -29,7 +29,6 @@
   - [Option 1: Direct script usage (simplest)](#option-1-direct-script-usage-simplest)
   - [Option 2: Install via pip (from GitHub)](#option-2-install-via-pip-from-github)
   - [Option 3: Install via pip (from PyPI)](#option-3-install-via-pip-from-pypi)
-  - [Option 4: Conda environment (recommended for reproducibility)](#option-4-conda-environment-recommended-for-reproducibility)
 - [Input File Formats](#-input-file-formats)
 - [Command Line Arguments](#-command-line-arguments)
 - [Usage Examples](#-usage-examples)
@@ -37,14 +36,10 @@
   - [Cross‑species comparison](#cross‑species-comparison)
   - [Including TE tracks](#including-te-tracks)
   - [Automatic reverse complement](#automatic-reverse-complement)
-  - [Highlighting a core region](#highlighting-a-core-region)
-  - [Adjusting plot appearance](#adjusting-plot-appearance)
 - [Output Files](#-output-files)
-- [Tips & Troubleshooting](#-tips--troubleshooting)
 - [Packaging & Publishing (for developers)](#-packaging--publishing-for-developers)
 - [Citation](#-citation)
 - [License](#-license)
-
 ---
 
 ## 🔬 What does GeneViz do?
