@@ -96,8 +96,11 @@ or via your system package manager (e.g., apt-get install samtools ncbi-blast+ o
 ## 🛠 Installation
 Option 1: Direct script usage (simplest)
 1.Download the genevis.py script from the GitHub repository.
+
 2.Install Python dependencies: pip install biopython pandas cairosvg.
+
 3.Ensure samtools and blastn are installed and accessible.
+
 4.Run the script with:
 ```bash
 python Geneviz.py --help
