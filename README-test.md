@@ -131,3 +131,30 @@ The two gene IDs are supplied directly via --gene1 and --gene2. No separate pair
 ### 2. GFF3 annotation file(s)
 - For single‑species mode: `--gff`
 - For cross‑species mode: `--gff1` and `--gff2`
+The GFF must contain `gene` features with an `ID` attribute (or `Name`). Exon/intron structures are extracted from `mRNA` and `exon` features. Example:
+```text
+Chr1    .       gene    1000    2000    .       +       .       ID=GeneA
+Chr1    .       mRNA    1000    2000    .       +       .       ID=GeneA.1;Parent=GeneA
+Chr1    .       exon    1000    1200    .       +       .       Parent=GeneA.1
+Chr1    .       exon    1500    2000    .       +       .       Parent=GeneA.1
+```
+### 3. Genome FASTA file(s)
+- For single‑species mode: `--fasta`
+- For cross‑species mode: `--fasta1` and `--fasta2`
+The FASTA must be indexed with `samtools faidx` (run `samtools faidx genome.fasta` beforehand). GeneViz will extract the region around each gene using `samtools`.
+### 4. TE GFF file(s) (optional)
+- For single‑species mode: `--te_gff`
+- For cross‑species mode: `--te_gff1` and `--te_gff2`
+If the attribute contains `Target "Motif:xxx"`, the motif name is displayed; otherwise "unknown". Example:
+```text
+##gff-version 3
+##sequence-region Chr1 1 43270923
+Chr1	RepeatMasker	dispersed_repeat	2762	2924	 9.2	-	.	ID=1;Target "Motif:Harbinger-N11_OS" 1 171
+Chr1	RepeatMasker	dispersed_repeat	18790	18926	 2.9	+	.	ID=2;Target "Motif:LINE1-N1F_OS" 1480 1616
+Chr1	RepeatMasker	dispersed_repeat	20731	20772	 7.3	-	.	ID=3;Target "Motif:MuDR-N18H_OS" 2627 2669
+Chr1	RepeatMasker	dispersed_repeat	22455	22538	 9.9	-	.	ID=4;Target "Motif:hAT-N43B_OS" 2135 2228
+Chr1	RepeatMasker	dispersed_repeat	27884	27974	10.0	+	.	ID=5;Target "Motif:EnSpm-11_OS" 4064 4156
+Chr1	RepeatMasker	dispersed_repeat	27895	28006	 7.2	+	.	ID=6;Target "Motif:HELITRON7_OS" 1599 1713
+Chr1	RepeatMasker	dispersed_repeat	28732	28974	 8.7	-	.	ID=7;Target "Motif:Harbinger-N9_OS" 1 231
+Chr1	RepeatMasker	dispersed_repeat	30292	30684	 1.0	-	.	ID=8;Target "Motif:ECR" 1 395
+```
