@@ -9,7 +9,7 @@
 ###############################################################################################
 ```
 
-# GeneViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species
+# MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
 
 [![Python](https://img.shields.io/badge/Python-3.6+-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
