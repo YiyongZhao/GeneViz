@@ -234,13 +234,32 @@ python Geneviz.py \
     --auto_complementary \
     --output my_synteny
 ```
-Compare two region in the same genome, with TE annotations, and let GeneViz run BLAST automatically:
+Compare two regions in the same genome, with TE annotations, and let GeneViz run BLAST automatically:
 ```bash
 python Geneviz.py \
-    --region1 Chr1:1000-5000 --Chr2 2000-6000 \
+    --region1 Chr1:1000-5000 --region2 Chr2 2000-6000 \
     --gff species.gff \
     --fasta genome.fasta \
     --te_gff TEs.gff \
     --auto_complementary \
     --output my_synteny
+```
+### Cross‑species comparison
+Compare genes from two different species:
+```bash
+python genevis.py \
+    --gene1 GeneA --gene2 GeneB \
+    --gff1 species1.gff --fasta1 genome1.fasta \
+    --gff2 species2.gff --fasta2 genome2.fasta \
+    --te_gff1 TEs1.gff --te_gff2 TEs2.gff \
+    --output cross_species
+```
+Compare regions from two different species:
+```bash
+python genevis.py \
+    --region1 Chr1:1000-5000 --region2 Chr2 2000-6000 \
+    --gff1 species1.gff --fasta1 genome1.fasta \
+    --gff2 species2.gff --fasta2 genome2.fasta \
+    --te_gff1 TEs1.gff --te_gff2 TEs2.gff \
+    --output cross_species
 ```
