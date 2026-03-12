@@ -46,8 +46,6 @@ GeneViz integrates modular tools for microsynteny visualization and gene duplica
 
 - **LinkView_Visualizer**: Generates publication-quality pairwise linkview plots displaying two genomic regions, BLASTN homology ribbons, gene annotations, and flanking TE tracks. Supports any species and any chromosome.
 - **MicroSynteny_Plotter**: Batch-processes multiple gene pairs and produces standardized linkview PDFs for systematic comparison.
-- **GD_Classifier**: Classifies gene pairs as Transposed / Segmental / Tandem based on BLASTN ribbon pattern.
-- **TE_Annotator**: Overlays TE annotations (Gypsy, Copia, Helitron, MuDR, Mariner, etc.) to support mechanistic inference (Pack-MULE, Pack-Helitron, LTR retrotransposition).
 
 ---
 
