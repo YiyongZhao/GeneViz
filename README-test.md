@@ -95,6 +95,7 @@ conda install -c bioconda samtools blast
 or via your system package manager (e.g., apt-get install samtools ncbi-blast+ on Ubuntu).
 ## 🛠 Installation
 Option 1: Direct script usage (simplest)
+
 1.Download the genevis.py script from the GitHub repository.
 
 2.Install Python dependencies: pip install biopython pandas cairosvg.
