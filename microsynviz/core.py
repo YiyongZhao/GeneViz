@@ -296,7 +296,7 @@ def parse_gene_gff(gff_file):
 # -------------------------- TE GFF Parsing -------------------------
 te_info = []   # list of (file_id, chro, start, end, motif_name, strand)
 
-def parse_te_gff(te_gff_file):
+def parse_te_gff(te_gff_file, source_order=0):
     """
     Parse TE GFF file and populate te_info.
     Recognizes common TE feature types and extracts motif name if available.
@@ -334,7 +334,7 @@ def parse_te_gff(te_gff_file):
                 motif_name = motif_match.group(1)
             else:
                 motif_name = "unknown"
-            te_info.append((file_id, seqid, start, end, motif_name, strand))
+            te_info.append((file_id, seqid, start, end, motif_name, strand, source_order))
             te_count += 1
             if sample_count < 5:
                 logger.debug(f" TE {file_id}: {seqid}:{start}-{end} motif={motif_name} strand={strand}")
@@ -430,7 +430,7 @@ def parse_bed_genes(bed_file):
     logger.info(f" BED gene parsing complete: {count} entries")
 
 
-def parse_bed_te(bed_file):
+def parse_bed_te(bed_file, source_order=0):
     """Parse BED file for TE annotations."""
     global te_info
     logger.info(f" Parsing BED (TE mode): {bed_file}")
@@ -451,18 +451,21 @@ def parse_bed_te(bed_file):
             name = cols[3] if len(cols) > 3 else "unknown"
             strand = cols[5] if len(cols) > 5 else '+'
             file_id = f"{chrom}_{start}_{end}"
-            te_info.append((file_id, chrom, start, end, name, strand))
+            te_info.append((file_id, chrom, start, end, name, strand, source_order))
             count += 1
     logger.info(f" BED TE parsing complete: {count} entries")
 
 
-def parse_annotation(filepath):
-    """Universal annotation parser: auto-detect format and parse for both gene and TE features."""
+def parse_annotation(filepath, source_order=0):
+    """Universal annotation parser: auto-detect format and parse for both gene and TE features.
+    
+    source_order: controls track layering (0 = closest to chromosome bar, 1 = next layer out, etc.)
+    """
     fmt = detect_format(filepath)
-    logger.info(f"  {filepath} [detected: {fmt.upper()}]\n")
+    logger.info(f"  {filepath} [detected: {fmt.upper()}, layer={source_order}]\n")
     if fmt == 'bed':
         parse_bed_genes(filepath)
-        parse_bed_te(filepath)
+        parse_bed_te(filepath, source_order=source_order)
     else:
         # GFF/GTF: try both gene and TE parsing
         try:
@@ -470,7 +473,7 @@ def parse_annotation(filepath):
         except Exception as e:
             sys.stderr.write(f"  [WARNING] Gene parsing failed for {filepath}: {e}\n")
         try:
-            parse_te_gff(filepath)
+            parse_te_gff(filepath, source_order=source_order)
         except Exception:
             pass  # Not all GFFs have TE features
 
@@ -904,7 +907,9 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
 
             te_candidates = []
             matched_chr_count = 0
-            for (file_id, te_chr, te_start, te_end, motif_name, strand) in te_info:
+            for entry in te_info:
+                file_id, te_chr, te_start, te_end, motif_name, strand = entry[:6]
+                source_order = entry[6] if len(entry) > 6 else 0
                 if te_chr.lower() != chromosome.lower():
                     continue
                 matched_chr_count += 1
@@ -939,7 +944,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
                 else:
                     actual_strand = strand
 
-                te_candidates.append((x1, x2, motif_name, actual_strand))
+                te_candidates.append((x1, x2, motif_name, actual_strand, source_order))
                 if debug_level >= 1:
                     logger.debug(f" TE {file_id}: original ({te_start},{te_end}) mapped to ({mapped_start},{mapped_end}) -> draw ({draw_start},{draw_end}) strand={actual_strand}")
 
@@ -950,11 +955,12 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
             base_id_offset = args.te_offset_base
             id_step = args.te_offset_step
 
-            for (x1, x2, motif_name, strand) in te_candidates:
+            for (x1, x2, motif_name, strand, src_order) in te_candidates:
                 y_layer_offset = 0
                 while True:
                     conflict = False
-                    for (used_offset, ux1, ux2) in used_layers:
+                    for used_entry in used_layers:
+                        used_offset, ux1, ux2 = used_entry[0], used_entry[1], used_entry[2]
                         if max(x1, ux1) <= min(x2, ux2) and used_offset == y_layer_offset:
                             conflict = True
                             break
@@ -964,7 +970,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
                     if y_layer_offset > 10 * (track_h + 2):
                         y_layer_offset = 0
                         break
-                used_layers.append((y_layer_offset, x1, x2))
+                used_layers.append((y_layer_offset, x1, x2, src_order))
 
                 if position == 'top':
                     rect_y = base_y - y_layer_offset
@@ -1610,8 +1616,10 @@ def main():
     log(f"  Region 2: genome={fasta2}, annotations={annos2}\n")
 
     if gene_mode:
-        # Search annotation files first, then fall back to FASTA index
-        result1 = _find_gene_in_annos(args.gene1, annos1) if annos1 else None
+        # Search ALL annotation files for each gene (annos1 first, then annos2 as fallback)
+        all_anno_files = list(dict.fromkeys(annos1 + annos2))  # deduplicate, preserve order
+        
+        result1 = _find_gene_in_annos(args.gene1, all_anno_files) if all_anno_files else None
         if not result1:
             # Fallback: gene ID might be a sequence name in the FASTA (CDS mode)
             result1 = _find_gene_in_fasta_index(args.gene1, fasta1)
@@ -1619,17 +1627,17 @@ def main():
                 logger.info(f" gene1 '{args.gene1}' found in FASTA index (CDS/sequence mode)")
         if not result1:
             raise GeneNotFoundError(
-                f"Gene '{args.gene1}' not found in annotations {annos1} or FASTA index {fasta1}")
+                f"Gene '{args.gene1}' not found in annotations {all_anno_files} or FASTA index {fasta1}")
         chr1, start1, end1, strand1 = result1
 
-        result2 = _find_gene_in_annos(args.gene2, annos2) if annos2 else None
+        result2 = _find_gene_in_annos(args.gene2, all_anno_files) if all_anno_files else None
         if not result2:
             result2 = _find_gene_in_fasta_index(args.gene2, fasta2)
             if result2:
                 logger.info(f" gene2 '{args.gene2}' found in FASTA index (CDS/sequence mode)")
         if not result2:
             raise GeneNotFoundError(
-                f"Gene '{args.gene2}' not found in annotations {annos2} or FASTA index {fasta2}")
+                f"Gene '{args.gene2}' not found in annotations {all_anno_files} or FASTA index {fasta2}")
         chr2, start2, end2, strand2 = result2
 
         seq1, seq1_start, seq1_end = extract_sequence_samtools(chr1, start1, end1, args.gene1, fasta1, args.extend)
@@ -1646,8 +1654,8 @@ def main():
     all_annos = list(dict.fromkeys(annos1 + annos2))  # deduplicate, preserve order
     if all_annos:
         log("[Step 2/4] Parsing annotations...\n")
-        for anno_path in all_annos:
-            parse_annotation(anno_path)
+        for idx, anno_path in enumerate(all_annos):
+            parse_annotation(anno_path, source_order=idx)
         log(f"  Found {len(gene_info)} genes, {len(te_info)} TE entries.\n")
     else:
         log("[Step 2/4] No annotation files provided — CDS/sequence mode (no gene structures)\n")
