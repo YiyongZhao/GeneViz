@@ -148,8 +148,8 @@ samtools faidx genome.fasta
 MicroSynViz \
     --gene1 LOC_Os06g50440 \
     --gene2 LOC_Os06g50789 \
-    --g1 genome.fa --gffs1 annotation.gff TEs.gff \
-    --g2 genome.fa --gffs2 annotation.gff TEs.gff \
+    --g1 genome.fa --annos1 annotation.gff TEs.gff \
+    --g2 genome.fa --annos2 annotation.gff TEs.gff \
     --auto_complementary --bezier \
     --output my_synteny
 ```
@@ -160,8 +160,8 @@ MicroSynViz \
 MicroSynViz \
     --gene1 GeneA \
     --gene2 GeneB \
-    --g1 rice.fa --gffs1 rice.gff rice_te.gff \
-    --g2 maize.fa --gffs2 maize.gff maize_te.gff \
+    --g1 rice.fa --annos1 rice.gff rice_te.gff \
+    --g2 maize.fa --annos2 maize.gff maize_te.gff \
     --auto_complementary --bezier \
     --output cross_species
 ```
@@ -172,13 +172,13 @@ MicroSynViz \
 MicroSynViz \
     --region1 Chr1:1000-5000 \
     --region2 Chr2:3000-8000 \
-    --g1 genome.fa --gffs1 annotation.gff \
-    --g2 genome.fa --gffs2 annotation.gff \
+    --g1 genome.fa --annos1 annotation.gff \
+    --g2 genome.fa --annos2 annotation.gff \
     --extend 5000 \
     --output region_synteny
 ```
 
-> **Design principle**: each region is self-contained with `--g1/--gffs1` and `--g2/--gffs2`. For single-species, simply provide the same files for both. GFF files are auto-parsed for both gene structure and TE features.
+> **Design principle**: each region is self-contained with `--g1/--annos1` and `--g2/--annos2`. For single-species, simply provide the same files for both. GFF files are auto-parsed for both gene structure and TE features.
 
 ---
 
@@ -196,8 +196,8 @@ Run `MicroSynViz --help` to see all options.
 | `--region2` | str | Genomic region 2 (Chr:start-end) |
 | `--g1` | FASTA | Genome FASTA for region 1 |
 | `--g2` | FASTA | Genome FASTA for region 2 |
-| `--gffs1` | GFF+ | GFF/GTF file(s) for region 1 (gene, TE, etc.) |
-| `--gffs2` | GFF+ | GFF/GTF file(s) for region 2 (gene, TE, etc.) |
+| `--annos1` | FILE+ | Annotation file(s) for region 1 (gene, TE, etc.) |
+| `--annos2` | FILE+ | Annotation file(s) for region 2 (gene, TE, etc.) |
 | `--extend` | int | Flanking extension in bp (default: 3000) |
 
 ### BLAST

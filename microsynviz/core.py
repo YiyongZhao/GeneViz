@@ -1150,12 +1150,14 @@ def main():
                         help="Genome FASTA for gene1/region1")
     parser.add_argument("--g2", required=True, metavar='FASTA',
                         help="Genome FASTA for gene2/region2")
-    parser.add_argument("--gffs1", nargs='+', required=True, metavar='GFF',
-                        help="GFF/GTF file(s) for gene1/region1 (gene annotation, TE annotation, etc.)")
-    parser.add_argument("--gffs2", nargs='+', required=True, metavar='GFF',
-                        help="GFF/GTF file(s) for gene2/region2 (gene annotation, TE annotation, etc.)")
+    parser.add_argument("--annos1", nargs='+', required=True, metavar='FILE',
+                        help="Annotation file(s) for gene1/region1 (GFF3, GTF — gene, TE, etc.)")
+    parser.add_argument("--annos2", nargs='+', required=True, metavar='FILE',
+                        help="Annotation file(s) for gene2/region2 (GFF3, GTF — gene, TE, etc.)")
 
     # Legacy aliases (hidden, for backward compatibility)
+    parser.add_argument("--gffs1", nargs='+', help=argparse.SUPPRESS)
+    parser.add_argument("--gffs2", nargs='+', help=argparse.SUPPRESS)
     parser.add_argument("-g", "--genome", nargs='+', help=argparse.SUPPRESS)
     parser.add_argument("--gff", nargs='+', help=argparse.SUPPRESS)
     parser.add_argument("--te", nargs='*', default=None, help=argparse.SUPPRESS)
