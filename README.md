@@ -40,6 +40,19 @@ MicroSynViz provides a reproducible workflow for visualizing **pairwise genomic 
 
 All you need are GFF annotation files, a genome FASTA, and optionally a TE annotation. MicroSynViz produces SVG and PDF vector figures ready for publication.
 
+### How is MicroSynViz different?
+
+Unlike genome-wide synteny tools (MCScanX, SynVisio, JupiterPlot), MicroSynViz focuses on **base-pair resolution visualization of individual gene pairs**, integrating gene structure (exons/introns), transposable element annotations, and BLASTN homology ribbons in a single publication-ready figure. This makes it particularly suited for studying the mechanisms of gene duplication (transposed, segmental, tandem) and the role of TEs in genomic rearrangements.
+
+| Feature | MCScanX | SynVisio | MicroSynViz |
+|---------|---------|----------|-------------|
+| Scale | Genome-wide | Genome-wide | Gene-pair level |
+| Gene structure (exon/intron) | No | No | **Yes** |
+| TE track overlay | No | No | **Yes** |
+| Auto BLAST + visualize | No | No | **Yes** |
+| Publication-ready vector output | No | Screenshot | **SVG + PDF** |
+| One-command workflow | No | No | **Yes** |
+
 ---
 
 ## Key Features
