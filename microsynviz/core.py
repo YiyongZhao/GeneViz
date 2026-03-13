@@ -185,7 +185,7 @@ def parse_gene_gff(gff_file):
     global gene_info, mRNA_info
     gene_type_name_set = {'gene', 'GENE'}
     mRNA_type_name_set = {'mRNA', 'mrna', 'MRNA', 'transcript'}
-    exon_type_name_set = {'exon', 'EXON'}
+    exon_type_name_set = {'exon', 'EXON', 'CDS', 'cds'}
 
     print(f"[INFO] Parsing gene GFF: {gff_file}")
     sample_count = 0
@@ -198,7 +198,7 @@ def parse_gene_gff(gff_file):
                 continue
             items = line.split('\t')
             if len(items) != 9:
-                raise FormatError('gff', gff_file, line)
+                continue  # skip non-standard lines silently
             seqid, source, feat, start, end, score, strand, phase, attr = items
             start, end = int(start), int(end)
             att = parse_attributes(attr)
@@ -265,7 +265,7 @@ def parse_te_gff(te_gff_file):
                 continue
             items = line.split('\t')
             if len(items) != 9:
-                raise FormatError('te_gff', te_gff_file, line)
+                continue  # skip non-standard lines silently
             seqid, source, feat, start, end, score, strand, phase, attr = items
             start, end = int(start), int(end)
             if feat not in te_type_name_set:
@@ -481,11 +481,14 @@ def extract_sequence_samtools(chr_id, start, end, gene_id, genome_fa, extend=300
     region_start = max(1, start - extend)
     region_end = end + extend
     region = f"{chr_id}:{region_start}-{region_end}"
-    cmd = f"samtools faidx {genome_fa} {region}"
+    cmd = ["samtools", "faidx", genome_fa, region]
     try:
-        output = subprocess.check_output(cmd, shell=True, encoding="utf-8")
+        output = subprocess.check_output(cmd, encoding="utf-8")
     except subprocess.CalledProcessError:
         sys.stderr.write(f"[ERROR] samtools failed to extract region: {region}\n")
+        sys.exit(1)
+    except FileNotFoundError:
+        sys.stderr.write("[ERROR] samtools not found in PATH.\n")
         sys.exit(1)
     lines = output.strip().split("\n")
     if len(lines) < 2 or len(lines[1].strip()) == 0:
@@ -501,11 +504,14 @@ def extract_region_samtools(chr_id, start, end, genome_fa, extend=0):
     region_start = max(1, start - extend)
     region_end = end + extend
     region = f"{chr_id}:{region_start}-{region_end}"
-    cmd = f"samtools faidx {genome_fa} {region}"
+    cmd = ["samtools", "faidx", genome_fa, region]
     try:
-        output = subprocess.check_output(cmd, shell=True, encoding="utf-8")
+        output = subprocess.check_output(cmd, encoding="utf-8")
     except subprocess.CalledProcessError:
         sys.stderr.write(f"[ERROR] samtools failed to extract region: {region}\n")
+        sys.exit(1)
+    except FileNotFoundError:
+        sys.stderr.write("[ERROR] samtools not found in PATH.\n")
         sys.exit(1)
     lines = output.strip().split("\n")
     if len(lines) < 2 or len(lines[1].strip()) == 0:
@@ -520,26 +526,29 @@ def extract_region_samtools(chr_id, start, end, genome_fa, extend=0):
 def run_blastn(seq_fasta, blast_out, evalue=1e-5, threads=8):
     """Run BLASTn with tabular output format 6."""
     check_file_exists(seq_fasta)
-    tmp_db = "tmp_blast_db"
-    makeblastdb_cmd = f"makeblastdb -in {seq_fasta} -dbtype nucl -out {tmp_db}"
+    import tempfile
+    tmp_dir = tempfile.mkdtemp(prefix="microsynviz_blast_")
+    tmp_db = os.path.join(tmp_dir, "blast_db")
+    makeblastdb_cmd = ["makeblastdb", "-in", seq_fasta, "-dbtype", "nucl", "-out", tmp_db]
     try:
-        subprocess.run(makeblastdb_cmd, shell=True, check=True,
+        subprocess.run(makeblastdb_cmd, check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        sys.stderr.write("[ERROR] Failed to build BLAST database\n")
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        sys.stderr.write(f"[ERROR] Failed to build BLAST database: {e}\n")
         sys.exit(1)
-    blast_cmd = (f"blastn -query {seq_fasta} -db {tmp_db} -evalue {evalue} "
-                 f"-out {blast_out} -outfmt 6 -num_threads {threads}")
+    blast_cmd = ["blastn", "-query", seq_fasta, "-db", tmp_db,
+                 "-evalue", str(evalue), "-out", blast_out,
+                 "-outfmt", "6", "-num_threads", str(threads)]
     try:
-        subprocess.run(blast_cmd, shell=True, check=True,
+        subprocess.run(blast_cmd, check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        sys.stderr.write("[ERROR] BLASTn alignment failed\n")
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        sys.stderr.write(f"[ERROR] BLASTn alignment failed: {e}\n")
         sys.exit(1)
-    # Cleanup temporary database files
-    for f in os.listdir("."):
-        if f.startswith(tmp_db):
-            os.remove(f)
+    finally:
+        # Cleanup temporary database directory
+        import shutil as _shutil
+        _shutil.rmtree(tmp_dir, ignore_errors=True)
 
 def read_sequence_lengths(fasta_file):
     """Return dictionary of sequence lengths from FASTA."""
@@ -1300,14 +1309,14 @@ def main():
     parser.add_argument("--extend", type=int, default=3000, help="Bases to extend around genes/regions (default: 3000)")
 
     # Per-region input files
-    parser.add_argument("--g1", metavar='FASTA',
-                        help="Genome FASTA for gene1/region1")
-    parser.add_argument("--g2", metavar='FASTA',
-                        help="Genome FASTA for gene2/region2")
-    parser.add_argument("--annos1", nargs='+', metavar='FILE',
-                        help="Annotation file(s) for gene1/region1 (GFF3, GTF — gene, TE, etc.)")
-    parser.add_argument("--annos2", nargs='+', metavar='FILE',
-                        help="Annotation file(s) for gene2/region2 (GFF3, GTF — gene, TE, etc.)")
+    parser.add_argument("--g1", default=None, metavar='FASTA',
+                        help="Genome FASTA for region 1. Takes priority over legacy flags (--genome / --fasta / --fasta1).")
+    parser.add_argument("--g2", default=None, metavar='FASTA',
+                        help="Genome FASTA for region 2. Takes priority over legacy flags (--genome / --fasta / --fasta2).")
+    parser.add_argument("--annos1", nargs='+', default=None, metavar='FILE',
+                        help="Annotation file(s) for region 1 (GFF3, GTF, BED -- gene, TE, etc.). Takes priority over legacy flags (--gff / --gff1 / --te / --te_gff).")
+    parser.add_argument("--annos2", nargs='+', default=None, metavar='FILE',
+                        help="Annotation file(s) for region 2 (GFF3, GTF, BED -- gene, TE, etc.). Takes priority over legacy flags (--gff / --gff2 / --te / --te_gff).")
 
     # Legacy aliases (hidden, for backward compatibility)
     parser.add_argument("--gffs1", nargs='+', help=argparse.SUPPRESS)
