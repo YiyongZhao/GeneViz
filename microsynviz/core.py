@@ -287,6 +287,157 @@ def parse_te_gff(te_gff_file):
                 sample_count += 1
     print(f"[INFO] TE parsing complete. TE entries stored: {len(te_info)}")
 
+
+
+# -------------------------- BED Parsing -------------------------
+def detect_format(filepath):
+    """Auto-detect annotation file format: gff/gtf or bed.
+    
+    Heuristic: read first non-comment, non-empty line.
+    - 9 tab-separated columns → GFF/GTF
+    - 3-12 tab-separated columns with int cols[1], int cols[2] → BED
+    """
+    with open(filepath, 'r') as f:
+        for line in f:
+            if line.startswith('#') or line.startswith('track') or line.startswith('browser'):
+                continue
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split('\t')
+            if len(cols) == 9:
+                return 'gff'
+            if 3 <= len(cols) <= 12:
+                try:
+                    int(cols[1])
+                    int(cols[2])
+                    return 'bed'
+                except ValueError:
+                    pass
+            return 'gff'  # fallback
+    return 'gff'
+
+
+def parse_bed_genes(bed_file):
+    """Parse BED12 file for gene structure (exons from blocks).
+    
+    BED12 columns: chrom, start, end, name, score, strand,
+                   thickStart, thickEnd, rgb, blockCount, blockSizes, blockStarts
+    BED6 or BED3: treated as single-exon genes.
+    """
+    global gene_info, mRNA_info
+    print(f"[INFO] Parsing BED (gene mode): {bed_file}")
+    count = 0
+    with open(bed_file, 'r') as f:
+        for line in f:
+            if line.startswith('#') or line.startswith('track') or line.startswith('browser'):
+                continue
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split('\t')
+            if len(cols) < 3:
+                continue
+            chrom = cols[0]
+            start = int(cols[1]) + 1  # BED is 0-based, convert to 1-based
+            end = int(cols[2])
+            name = cols[3] if len(cols) > 3 else f"{chrom}_{start}_{end}"
+            strand = cols[5] if len(cols) > 5 else '+'
+
+            gene_info.setdefault(name, {})
+            gene_info[name]['chro'] = chrom
+            gene_info[name]['strand'] = strand
+            gene_info[name]['gene'] = (start, end)
+
+            # BED12: parse blocks as exons
+            if len(cols) >= 12:
+                block_count = int(cols[9])
+                block_sizes = [int(x) for x in cols[10].rstrip(',').split(',') if x]
+                block_starts = [int(x) for x in cols[11].rstrip(',').split(',') if x]
+                mrna_id = f"{name}.1"
+                mRNA_info.setdefault(mrna_id, {})
+                mRNA_info[mrna_id]['pos'] = (start, end)
+                mRNA_info[mrna_id]['exon'] = []
+                for i in range(block_count):
+                    exon_start = int(cols[1]) + block_starts[i] + 1  # 0-based to 1-based
+                    exon_end = exon_start + block_sizes[i] - 1
+                    mRNA_info[mrna_id]['exon'].append((exon_start, exon_end))
+                gene_info[name].setdefault('mRNA', {})
+                gene_info[name]['mRNA'][mrna_id] = mRNA_info[mrna_id]
+            else:
+                # BED3/6: single exon = whole gene
+                mrna_id = f"{name}.1"
+                mRNA_info.setdefault(mrna_id, {})
+                mRNA_info[mrna_id]['pos'] = (start, end)
+                mRNA_info[mrna_id]['exon'] = [(start, end)]
+                gene_info[name].setdefault('mRNA', {})
+                gene_info[name]['mRNA'][mrna_id] = mRNA_info[mrna_id]
+            count += 1
+    print(f"[INFO] BED gene parsing complete: {count} entries")
+
+
+def parse_bed_te(bed_file):
+    """Parse BED file for TE annotations."""
+    global te_info
+    print(f"[INFO] Parsing BED (TE mode): {bed_file}")
+    count = 0
+    with open(bed_file, 'r') as f:
+        for line in f:
+            if line.startswith('#') or line.startswith('track') or line.startswith('browser'):
+                continue
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split('\t')
+            if len(cols) < 3:
+                continue
+            chrom = cols[0]
+            start = int(cols[1]) + 1  # 0-based to 1-based
+            end = int(cols[2])
+            name = cols[3] if len(cols) > 3 else "unknown"
+            strand = cols[5] if len(cols) > 5 else '+'
+            file_id = f"{chrom}_{start}_{end}"
+            te_info.append((file_id, chrom, start, end, name, strand))
+            count += 1
+    print(f"[INFO] BED TE parsing complete: {count} entries")
+
+
+def parse_annotation(filepath):
+    """Universal annotation parser: auto-detect format and parse for both gene and TE features."""
+    fmt = detect_format(filepath)
+    sys.stdout.write(f"  {filepath} [detected: {fmt.upper()}]\n")
+    if fmt == 'bed':
+        parse_bed_genes(filepath)
+        parse_bed_te(filepath)
+    else:
+        # GFF/GTF: try both gene and TE parsing
+        try:
+            parse_gene_gff(filepath)
+        except Exception as e:
+            sys.stderr.write(f"  [WARNING] Gene parsing failed for {filepath}: {e}\n")
+        try:
+            parse_te_gff(filepath)
+        except Exception:
+            pass  # Not all GFFs have TE features
+
+
+def extract_gene_from_bed(gene_id, bed_file):
+    """Extract gene coordinates from a BED file."""
+    with open(bed_file, 'r') as f:
+        for line in f:
+            if line.startswith('#') or line.startswith('track') or line.startswith('browser'):
+                continue
+            cols = line.strip().split('\t')
+            if len(cols) < 4:
+                continue
+            if cols[3] == gene_id:
+                chrom = cols[0]
+                start = int(cols[1]) + 1  # 0-based to 1-based
+                end = int(cols[2])
+                strand = cols[5] if len(cols) > 5 else '+'
+                return chrom, start, end, strand
+    return None
+
 # -------------------------- Utility Functions -------------------------
 def check_file_exists(file_path):
     """Exit with error if file does not exist."""
@@ -294,10 +445,18 @@ def check_file_exists(file_path):
         sys.stderr.write(f"[ERROR] File not found: {file_path}\n")
         sys.exit(1)
 
-def extract_gene_coordinates(gene_id, gff_file):
-    """Extract gene coordinates from GFF3 or GTF file (pure Python, no awk)."""
-    check_file_exists(gff_file)
-    with open(gff_file, 'r') as f:
+def extract_gene_coordinates(gene_id, anno_file):
+    """Extract gene coordinates from GFF3, GTF, or BED file."""
+    check_file_exists(anno_file)
+    fmt = detect_format(anno_file)
+    if fmt == 'bed':
+        result = extract_gene_from_bed(gene_id, anno_file)
+        if result:
+            return result
+        sys.stderr.write(f"[ERROR] Gene {gene_id} not found in BED file {anno_file}\n")
+        sys.exit(1)
+    # GFF/GTF
+    with open(anno_file, 'r') as f:
         for line in f:
             if line.startswith('#'):
                 continue
@@ -306,17 +465,14 @@ def extract_gene_coordinates(gene_id, gff_file):
                 continue
             if parts[2] != 'gene':
                 continue
-            attr = parts[8]
-            # GFF3: ID=gene_id or Name=gene_id
-            # GTF: gene_id "gene_id"
-            att = parse_attributes(attr)
+            att = parse_attributes(parts[8])
             match = (att.get('ID') == gene_id or
                      att.get('Name') == gene_id or
                      att.get('gene_id') == gene_id or
                      att.get('gene_name') == gene_id)
             if match:
                 return parts[0], int(parts[3]), int(parts[4]), parts[6]
-    sys.stderr.write(f"[ERROR] Gene {gene_id} not found in {gff_file}\n")
+    sys.stderr.write(f"[ERROR] Gene {gene_id} not found in {anno_file}\n")
     sys.exit(1)
 
 def extract_sequence_samtools(chr_id, start, end, gene_id, genome_fa, extend=3000):

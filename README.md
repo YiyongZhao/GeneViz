@@ -56,7 +56,7 @@ Unlike genome-wide synteny tools (MCScanX, SynVisio, JupiterPlot), MicroSynViz f
 ## Key Features
 
 - **Per-region input**: each region gets its own genome + annotations — no mode switching
-- **Unified GFF parsing**: gene and TE annotations are auto-detected from any GFF file
+- **Format-agnostic**: auto-detects GFF3, GTF, and BED — mix freely in annotation inputs
 - **Two input modes**: gene IDs (`--gene1/--gene2`) or genomic regions (`--region1/--region2`)
 - **Automatic reverse complement** detection based on BLAST alignment orientation
 - **Flexible ribbon coloring**: color by bitscore, identity, or e-value (`--color_by`)
@@ -112,9 +112,11 @@ MicroSynViz --help
 
 ## Input Files
 
-### GFF3 Annotation
+### Annotation Files (GFF3 / GTF / BED)
 
-Standard GFF3/GTF format with `gene`, `mRNA`, `exon`, and/or TE features. MicroSynViz automatically detects gene structure and TE features from the same file — no need to separate them.
+MicroSynViz **auto-detects** the file format. You can mix formats freely in `--annos1` / `--annos2`.
+
+**GFF3** — standard format with `gene`, `mRNA`, `exon`, TE features:
 
 ```
 Chr1    MSU_osa1r7    gene    1000    2000    .    +    .    ID=LOC_Os01g01010
@@ -122,13 +124,21 @@ Chr1    MSU_osa1r7    exon    1000    1200    .    +    .    Parent=LOC_Os01g010
 Chr1    RepeatMasker  transposable_element  3000  3500  .  +  .  ID=TE001;Target="Motif:hAT"
 ```
 
-GTF format is also supported:
+**GTF** — Ensembl/GENCODE style:
 
 ```
 Chr1    ensembl    gene    1000    2000    .    +    .    gene_id "ENSG001"; gene_name "ABC";
 Chr1    ensembl    transcript    1000    2000    .    +    .    gene_id "ENSG001"; transcript_id "ENST001";
 Chr1    ensembl    exon    1000    1200    .    +    .    gene_id "ENSG001"; transcript_id "ENST001";
 ```
+
+**BED** — BED3/BED6/BED12 (0-based coordinates, auto-converted):
+
+```
+Chr1    999    2000    LOC_Os01g01010    0    +    999    2000    0    3    200,150,300    0,400,800
+```
+
+BED12 block columns are parsed as exons; BED3/BED6 are treated as single-exon genes.
 
 ### Genome FASTA
 
