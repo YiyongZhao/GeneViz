@@ -94,9 +94,9 @@ style_css = {
 }
 
 # -------------------------- Custom Exceptions -------------------------
-class ArgumentError(Exception): pass
-class FormatError(Exception): pass
-class FatalError(Exception): pass
+class FormatError(Exception):
+    def __init__(self, fmt_type, filename, line=""):
+        super().__init__(f"Invalid {fmt_type} format in {filename}: {line[:100]}")
 
 # -------------------------- Chromosome/Drawing Helper Class -------------------------
 class Chro():
@@ -686,7 +686,6 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
         if color_metric == 'evalue':
             invert_color = True
             # Use -log10(evalue) for color mapping (higher = better match)
-            import math
             scores = [-math.log10(max(s, 1e-300)) for s in scores]
         legend_min = min(scores)
         legend_max = max(scores)
@@ -712,7 +711,6 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
 
             # Normalize score for color mapping
             if color_metric == 'evalue':
-                import math
                 score_val = -math.log10(max(hit['evalue'], 1e-300))
             elif color_metric == 'identity':
                 score_val = hit['pident']
@@ -1266,10 +1264,10 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
             f'<rect x="{legend_x}" y="{legend_y}" width="{legend_width}" height="{legend_height}" fill="url(#grayPurpleRedGradient)" stroke="black" stroke-width="1"/>'
         )
         svg_content_parts.append(
-            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + 12}" fill="black" font-size="10" text-anchor="start">{legend_max:.1f}{"%%" if color_metric == "identity" else ""}</text>'
+            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + 12}" fill="black" font-size="10" text-anchor="start">{legend_max:.1f}{"%" if color_metric == "identity" else ""}</text>'
         )
         svg_content_parts.append(
-            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + legend_height - 5}" fill="black" font-size="10" text-anchor="start">{legend_min:.1f}{"%%" if color_metric == "identity" else ""}</text>'
+            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + legend_height - 5}" fill="black" font-size="10" text-anchor="start">{legend_min:.1f}{"%" if color_metric == "identity" else ""}</text>'
         )
         svg_content_parts.append(
             f'<text x="{legend_x}" y="{legend_y - 10}" fill="black" font-size="11" text-anchor="start">'
@@ -1302,13 +1300,13 @@ def main():
     parser.add_argument("--extend", type=int, default=3000, help="Bases to extend around genes/regions (default: 3000)")
 
     # Per-region input files
-    parser.add_argument("--g1", required=True, metavar='FASTA',
+    parser.add_argument("--g1", metavar='FASTA',
                         help="Genome FASTA for gene1/region1")
-    parser.add_argument("--g2", required=True, metavar='FASTA',
+    parser.add_argument("--g2", metavar='FASTA',
                         help="Genome FASTA for gene2/region2")
-    parser.add_argument("--annos1", nargs='+', required=True, metavar='FILE',
+    parser.add_argument("--annos1", nargs='+', metavar='FILE',
                         help="Annotation file(s) for gene1/region1 (GFF3, GTF — gene, TE, etc.)")
-    parser.add_argument("--annos2", nargs='+', required=True, metavar='FILE',
+    parser.add_argument("--annos2", nargs='+', metavar='FILE',
                         help="Annotation file(s) for gene2/region2 (GFF3, GTF — gene, TE, etc.)")
 
     # Legacy aliases (hidden, for backward compatibility)
@@ -1333,7 +1331,7 @@ def main():
     parser.add_argument("--color_by", choices=["bitscore", "identity", "evalue"], default="bitscore",
                         help="Metric for ribbon color gradient: bitscore (default), identity, or evalue")
     parser.add_argument("--threads", type=int, default=8, help="Number of threads for BLAST (default: 8)")
-    parser.add_argument("--blast_result", help="Pre-computed BLAST output (outfmt 6); if not given, BLAST is run automatically")
+    parser.add_argument("--blast_result", metavar="FILE", help="Pre-computed BLAST result in tabular format (outfmt 6: qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore). If provided, skips automatic BLAST.")
     parser.add_argument("--auto_complementary", action='store_true',
                         help='Enable automatic reverse complement based on BLAST alignment direction. '
                              'When enabled, if most BLAST hits are reverse complementary, the second sequence '
@@ -1366,6 +1364,13 @@ def main():
     args = parser.parse_args()
     scale = 1.0
 
+    # Check external dependencies
+    import shutil
+    for tool in ['samtools', 'blastn', 'makeblastdb']:
+        if not shutil.which(tool):
+            sys.stderr.write(f"[ERROR] '{tool}' not found in PATH. Install via: conda install -c bioconda samtools blast\n")
+            sys.exit(1)
+
     # Validate input mode
     gene_mode = args.gene1 is not None and args.gene2 is not None
     region_mode = args.region1 is not None and args.region2 is not None
@@ -1380,67 +1385,81 @@ def main():
         region_mode = False
 
     # ===================== Resolve input files =====================
-    # Unified logic: --genome/-g and --gff accept 1 or 2 files
-    # 1 file = single-species (shared), 2 files = cross-species
-    # Legacy flags (--fasta, --fasta1/2, --gff1/2, --te_gff, --te_gff1/2) are also accepted
+    # Primary: --g1/--g2 + --annos1/--annos2
+    # Legacy fallback: --genome, --gff, --te, --fasta*, --gff*, --te_gff*, --gffs*
+    fasta1 = getattr(args, 'g1', None)
+    fasta2 = getattr(args, 'g2', None)
+    annos1 = list(args.annos1) if getattr(args, 'annos1', None) else []
+    annos2 = list(args.annos2) if getattr(args, 'annos2', None) else []
 
-    # Merge legacy flags into unified lists
-    genome_files = args.genome or []
-    gff_files = list(args.gff) if args.gff else []
-    te_files = list(args.te) if args.te else []
+    # Legacy --gffs1/--gffs2
+    if not annos1 and getattr(args, 'gffs1', None):
+        annos1 = list(args.gffs1)
+    if not annos2 and getattr(args, 'gffs2', None):
+        annos2 = list(args.gffs2)
 
-    # Legacy: --fasta / --fasta1 / --fasta2
-    if not genome_files:
-        if args.fasta1 and args.fasta2:
-            genome_files = [args.fasta1, args.fasta2]
-        elif args.fasta:
-            genome_files = [args.fasta]
-    # Legacy: --gff1 / --gff2 (only if --gff not already given)
-    if not gff_files:
-        if args.gff1 and args.gff2:
-            gff_files = [args.gff1, args.gff2]
-    # Legacy: --te_gff / --te_gff1 / --te_gff2
-    if not te_files:
-        if args.te_gff1 or args.te_gff2:
-            te_files = [f for f in [args.te_gff1, args.te_gff2] if f]
-        elif args.te_gff:
-            te_files = [args.te_gff]
+    # Legacy --genome/-g, --gff, --te, --fasta*, --gff*, --te_gff*
+    if not fasta1 or not fasta2:
+        genome_files = getattr(args, 'genome', None) or []
+        if not genome_files:
+            f1 = getattr(args, 'fasta1', None)
+            f2 = getattr(args, 'fasta2', None)
+            f0 = getattr(args, 'fasta', None)
+            if f1 and f2:
+                genome_files = [f1, f2]
+            elif f0:
+                genome_files = [f0]
+        if genome_files:
+            fasta1 = fasta1 or genome_files[0]
+            fasta2 = fasta2 or (genome_files[1] if len(genome_files) >= 2 else genome_files[0])
+
+    if not annos1 or not annos2:
+        gff_files = list(args.gff) if getattr(args, 'gff', None) else []
+        te_files = list(args.te) if getattr(args, 'te', None) else []
+        if not gff_files:
+            g1 = getattr(args, 'gff1', None)
+            g2 = getattr(args, 'gff2', None)
+            if g1 and g2:
+                gff_files = [g1, g2]
+            elif g1:
+                gff_files = [g1]
+        legacy_te = []
+        if not te_files:
+            for attr_name in ['te_gff', 'te_gff1', 'te_gff2']:
+                v = getattr(args, attr_name, None)
+                if v and v not in legacy_te:
+                    legacy_te.append(v)
+        all_te = te_files or legacy_te
+        if not annos1 and gff_files:
+            annos1 = [gff_files[0]] + (all_te[:1] if all_te else [])
+        if not annos2 and gff_files:
+            idx = min(1, len(gff_files) - 1)
+            te_idx = min(1, len(all_te) - 1) if all_te else -1
+            annos2 = [gff_files[idx]] + ([all_te[te_idx]] if te_idx >= 0 else [])
 
     # Validate
-    if not genome_files:
-        sys.stderr.write("[ERROR] --genome/-g is required. Provide 1 FASTA (single-species) or 2 (cross-species).\n")
+    if not fasta1 or not fasta2:
+        sys.stderr.write("[ERROR] Genome FASTA required. Use --g1/--g2 (or legacy --genome/-g).\n")
         sys.exit(1)
-    if len(genome_files) > 2:
-        sys.stderr.write("[ERROR] --genome/-g accepts at most 2 files.\n")
-        sys.exit(1)
-    if not gff_files:
-        sys.stderr.write("[ERROR] --gff is required. Provide 1 GFF (single-species) or 2 (cross-species).\n")
-        sys.exit(1)
-    if len(gff_files) > 2:
-        sys.stderr.write("[ERROR] --gff accepts at most 2 files.\n")
-        sys.exit(1)
-    if len(te_files) > 2:
-        sys.stderr.write("[ERROR] --te accepts at most 2 files.\n")
+    if not annos1 or not annos2:
+        sys.stderr.write("[ERROR] Annotation files required. Use --annos1/--annos2 (or legacy --gff).\n")
         sys.exit(1)
 
-    # Expand: 1 file → use for both regions
-    fasta1 = genome_files[0]
-    fasta2 = genome_files[1] if len(genome_files) == 2 else genome_files[0]
-    gff1 = gff_files[0]
-    gff2 = gff_files[1] if len(gff_files) == 2 else gff_files[0]
-    te_gff1 = te_files[0] if len(te_files) >= 1 else None
-    te_gff2 = te_files[1] if len(te_files) == 2 else te_gff1
-
-    dual_species = (fasta1 != fasta2) or (gff1 != gff2)
-    mode_label = "cross-species" if dual_species else "single-species"
-
-    for f in [fasta1, fasta2, gff1, gff2]:
+    check_file_exists(fasta1)
+    check_file_exists(fasta2)
+    for f in annos1 + annos2:
         check_file_exists(f)
 
+    dual_species = (fasta1 != fasta2)
+    mode_label = "cross-species" if dual_species else "single-species"
+
     sys.stdout.write(f"[Step 1/4] Extracting coordinates ({mode_label})...\n")
+    sys.stdout.write(f"  Region 1: genome={fasta1}, annotations={annos1}\n")
+    sys.stdout.write(f"  Region 2: genome={fasta2}, annotations={annos2}\n")
+
     if gene_mode:
-        chr1, start1, end1, strand1 = extract_gene_coordinates(args.gene1, gff1)
-        chr2, start2, end2, strand2 = extract_gene_coordinates(args.gene2, gff2)
+        chr1, start1, end1, strand1 = extract_gene_coordinates(args.gene1, annos1[0])
+        chr2, start2, end2, strand2 = extract_gene_coordinates(args.gene2, annos2[0])
         seq1, seq1_start, seq1_end = extract_sequence_samtools(chr1, start1, end1, args.gene1, fasta1, args.extend)
         seq2, seq2_start, seq2_end = extract_sequence_samtools(chr2, start2, end2, args.gene2, fasta2, args.extend)
     else:  # region mode
@@ -1451,29 +1470,12 @@ def main():
         seq1, seq1_start, seq1_end = extract_region_samtools(chr1, start1, end1, fasta1, args.extend)
         seq2, seq2_start, seq2_end = extract_region_samtools(chr2, start2, end2, fasta2, args.extend)
 
-    # Parse gene GFFs
-    sys.stdout.write("[Step 2a/4] Parsing gene GFF(s)...\n")
-    try:
-        parse_gene_gff(gff1)
-        if gff2 != gff1:
-            parse_gene_gff(gff2)
-        sys.stdout.write(f"[Info] Found {len(gene_info)} genes in total.\n")
-    except Exception as e:
-        sys.stderr.write(f"[WARNING] Failed to parse gene GFF: {e}\n")
-        sys.stderr.write("Gene structures will not be drawn.\n")
-
-    # Parse TE GFFs
-    if te_gff1:
-        sys.stdout.write("[Step 2b/4] Parsing TE GFF(s)...\n")
-        try:
-            parse_te_gff(te_gff1)
-            if te_gff2 and te_gff2 != te_gff1:
-                parse_te_gff(te_gff2)
-            sys.stdout.write(f"[Info] Found {len(te_info)} TE entries.\n")
-        except Exception as e:
-            sys.stderr.write(f"[WARNING] Failed to parse TE GFF: {e}\n")
-    else:
-        sys.stdout.write("[Step 2b/4] No TE annotation provided.\n")
+    # Parse ALL annotation files (auto-detect GFF3/GTF/BED)
+    sys.stdout.write("[Step 2/4] Parsing annotations...\n")
+    all_annos = list(dict.fromkeys(annos1 + annos2))  # deduplicate, preserve order
+    for anno_path in all_annos:
+        parse_annotation(anno_path)
+    sys.stdout.write(f"  Found {len(gene_info)} genes, {len(te_info)} TE entries.\n")
 
     # Common steps
     if gene_mode:
@@ -1497,8 +1499,14 @@ def main():
         f.write(seq1 + "\n")
         f.write(seq2 + "\n")
 
-    sys.stdout.write("[Step 3a/4] Running initial BLASTn alignment...\n")
-    run_blastn(seq_fasta, blast_out, args.evalue, args.threads)
+    if args.blast_result:
+        # Use pre-computed BLAST result (must be outfmt 6)
+        check_file_exists(args.blast_result)
+        blast_out = args.blast_result
+        sys.stdout.write(f"[Step 3a/4] Using pre-computed BLAST result: {blast_out}\n")
+    else:
+        sys.stdout.write("[Step 3a/4] Running initial BLASTn alignment...\n")
+        run_blastn(seq_fasta, blast_out, args.evalue, args.threads)
     blast_hits = parse_blast_results(blast_out, min_identity=args.identity, min_length=args.alignment_length)
 
     # If auto_complementary enabled, decide whether to reverse second sequence
@@ -1535,7 +1543,6 @@ def main():
             seq_record.seq = seq_record.seq.reverse_complement()
             seq2 = seq_record.format("fasta")
             # Swap coordinates to maintain left<right
-            seq2_start, seq2_end = seq2_end, seq2_start
             seq2_start, seq2_end = min(seq2_start, seq2_end), max(seq2_start, seq2_end)
             revcomp2 = True
             # Write updated FASTA
