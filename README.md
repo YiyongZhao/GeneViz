@@ -259,6 +259,7 @@ Run `MicroSynViz --help` to see all options.
 | `--svg_width` | int | 2000 | SVG canvas width |
 | `--svg_height` | int | 800 | SVG canvas height |
 | `--output` | str | MicroSynViz_result | Output file prefix |
+| `--quiet` / `-q` | flag | — | Suppress informational output |
 
 ---
 
