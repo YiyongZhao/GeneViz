@@ -11,3 +11,5 @@ results/
 !example_data/**/*.pdf
 .env
 .venv
+!example-test/**/*.pdf
+!example-test/**/*.svg

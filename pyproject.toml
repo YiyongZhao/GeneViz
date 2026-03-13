@@ -1,11 +1,11 @@
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "GeneViz"
+name = "MicroSynViz"
 version = "1.0.0"
-description = "A user-friendly toolkit for visualizing pairwise genomic microsynteny across any species"
+description = "Visualizing Pairwise Genomic Microsynteny Within and Between Species"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
@@ -25,16 +25,16 @@ dependencies = [
   "scipy",
   "matplotlib>=3.5",
   "biopython",
+  "cairosvg",
 ]
 
 [project.scripts]
-GeneViz = "geneviz.GeneViz:main"
+MicroSynViz = "microsynviz.MicroSynViz:main"
 
 [project.urls]
 Homepage = "https://github.com/YiyongZhao/GeneViz"
 Issues = "https://github.com/YiyongZhao/GeneViz/issues"
-PyPI = "https://pypi.org/project/GeneViz"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["geneviz*"]
+include = ["microsynviz*"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GeneViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species
+MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
 ================================================================================================
 A professional tool for visualizing gene synteny with TE tracks,
 gene structures, and BLAST-based homology links. Designed for
@@ -25,12 +25,12 @@ Dependencies:
     blastn (command-line)
 
 Usage example (gene mode):
-    ./genevis.py --gene1 GeneA --gene2 GeneB \\
+    MicroSynViz_core.py --gene1 GeneA --gene2 GeneB \\
         --gff species.gff --fasta genome.fasta --te_gff TEs.gff \\
         --auto_complementary --output my_synteny
 
 Usage example (region mode):
-    ./genevis.py --region1 "Chr1:1000-2000" --region2 "Chr2:3000-4000" \\
+    MicroSynViz_core.py --region1 "Chr1:1000-2000" --region2 "Chr2:3000-4000" \\
         --gff species.gff --fasta genome.fasta --te_gff TEs.gff \\
         --extend 5000 --output region_synteny
 
@@ -1077,7 +1077,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
 def main():
     global args, scale
     parser = argparse.ArgumentParser(
-        description="GeneViz: Visualize Pairwise Genomic Microsynteny",
+        description="MicroSynViz: Visualize Pairwise Genomic Microsynteny",
         epilog="For detailed documentation, see https://github.com/yourusername/GeneViz"
     )
     # Two mutually exclusive input modes: gene IDs or genomic regions
@@ -1130,10 +1130,10 @@ def main():
     parser.add_argument('--te_track_offset', type=float, default=30, help="Distance from chromosome to TE track (default: 30)")
 
     # Output
-    parser.add_argument("--output", default="GeneViz_result", help="Output file prefix (default: GeneViz_result)")
+    parser.add_argument("--output", default="MicroSynViz_result", help="Output file prefix (default: MicroSynViz_result)")
 
     # Version
-    parser.add_argument('--version', action='version', version=f'GeneViz {__version__}')
+    parser.add_argument('--version', action='version', version=f'MicroSynViz {__version__}')
 
     args = parser.parse_args()
     scale = 1.0

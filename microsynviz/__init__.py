@@ -1,5 +1,5 @@
 """
-GeneViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species
+MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
 Version: 1.0.0
 Author: Yiyong Zhao (yiyong.zhao@yale.edu)
 """

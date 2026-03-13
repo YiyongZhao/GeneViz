@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GeneViz - GD_Classifier
+MicroSynViz - GD_Classifier
 Author: Yiyong Zhao (yiyong.zhao@yale.edu)
 
 TODO: Add implementation
@@ -10,7 +10,7 @@ import argparse
 
 def run(args=None):
     parser = argparse.ArgumentParser(
-        prog="GeneViz GD_Classifier",
+        prog="MicroSynViz GD_Classifier",
         description="GD_Classifier: (description to be added)"
     )
     # TODO: add arguments
@@ -23,7 +23,7 @@ def run(args=None):
     parser.add_argument("--window", type=int, default=50000, help="Flanking window size in bp (default: 50000)")
     parser.add_argument("--output_dir", default=".", help="Output directory (default: current directory)")
     opts = parser.parse_args(args)
-    print(f"[GeneViz] Running GD_Classifier (implementation coming soon)")
+    print(f"[MicroSynViz] Running GD_Classifier (implementation coming soon)")
     print(f"  Input pairs : {opts.input_pairs}")
     print(f"  BLAST result: {opts.blast_result}")
     print(f"  Window      : {opts.window} bp")

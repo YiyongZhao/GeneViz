@@ -1,4 +1,4 @@
-# GeneViz Documentation
+# MicroSynViz Documentation
 
 Full documentation: https://geneviz.readthedocs.io
 

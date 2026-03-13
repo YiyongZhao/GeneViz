@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GeneViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species
+MicroSynViz: A User-Friendly Toolkit for Visualizing Pairwise Genomic Microsynteny across Any Species
 ================================================================================================
 A professional tool for visualizing gene synteny with TE tracks,
 gene structures, and BLAST-based homology links. Designed for

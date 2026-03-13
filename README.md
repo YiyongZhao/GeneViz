@@ -22,7 +22,7 @@
 
 ## 📖 Table of Contents
 
-- [What does GeneViz do?](#-what-does-geneviz-do)
+- [What does MicroSynViz do?](#-what-does-microsynviz-do)
 - [Key Features](#-key-features)
 - [Dependencies](#-dependencies)
 - [Installation](#-installation)
@@ -42,9 +42,9 @@
 - [License](#-license)
 ---
 
-## 🔬 What does GeneViz do?
+## 🔬 What does MicroSynViz do?
 
-GeneViz is a lightweight yet powerful Python script that generates **publication‑quality pairwise microsynteny plots** for any two genomic regions, within the same species or across different species. It combines:
+MicroSynViz is a lightweight yet powerful Python script that generates **publication‑quality pairwise microsynteny plots** for any two genomic regions, within the same species or across different species. It combines:
 
 - **BLAST‑based homology** ribbons (colored by bitscore)
 - **Gene structure** (exons/introns with direction arrows)
@@ -52,7 +52,7 @@ GeneViz is a lightweight yet powerful Python script that generates **publication
 - **Automatic orientation detection** (reverse‑complement when needed)
 - **Core region highlighting** (e.g., conserved domains)
 
-All you need are GFF annotation files, a genome FASTA, and BLAST output (optional – the script can run BLAST for you). GeneViz produces SVG and PDF vector figures ready for publication.
+All you need are GFF annotation files, a genome FASTA, and BLAST output (optional – the script can run BLAST for you). MicroSynViz produces SVG and PDF vector figures ready for publication.
 
 ---
 
@@ -108,7 +108,7 @@ python Geneviz.py --help
 Clone the repository and install in editable mode (this makes the genevis command available):
 ```bash
 git clone https://github.com/yourusername/GeneViz.git
-cd GeneViz
+cd GeneViz  # repository name
 pip install -e .
 ```
 Now you can run genevis from anywhere:
@@ -118,11 +118,11 @@ Geneviz --help
 ### Option 3: Install via pip (from PyPI)
 If the package is uploaded to PyPI:
 ```bash
-pip install GeneViz
+pip install MicroSynViz
 genevis --help
 ```
 ## 📁 Input File Formats
-GeneViz requires several input files. All are plain text; please follow the exact formats.
+MicroSynViz requires several input files. All are plain text; please follow the exact formats.
 ### 1. Gene pair & Region specification
 #### - Gene pair specification:
 The two gene IDs are supplied directly via `--gene1` and `--gene2`. No separate pair file is needed. Use:
@@ -151,7 +151,7 @@ Chr1    .       exon    1500    2000    .       +       .       Parent=GeneA.1
 ### 3. Genome FASTA file(s)
 - For single‑species mode: `--fasta`
 - For cross‑species mode: `--fasta1` and `--fasta2`
-The FASTA must be indexed with `samtools faidx` (run `samtools faidx genome.fasta` beforehand). GeneViz will extract the region around each gene using `samtools`.
+The FASTA must be indexed with `samtools faidx` (run `samtools faidx genome.fasta` beforehand). MicroSynViz will extract the region around each gene using `samtools`.
 ### 4. TE GFF file(s) (optional)
 - For single‑species mode: `--te_gff`
 - For cross‑species mode: `--te_gff1` and `--te_gff2`
@@ -217,11 +217,11 @@ Run python Geneviz.py --help to see all options.
 | `--te_track_offset` | float | 30 | Distance from chromosome to TE track |
 | | | | |
 | *Output* | | | |
-| `--output` | str | GeneViz_result | Prefix for all output files |
+| `--output` | str | MicroSynViz_result | Prefix for all output files |
 | `--version` | flag | | Show version and exit |
 ## 🚀 Usage Examples
 ### Single‑species comparison
-Compare two genes in the same genome, with TE annotations, and let GeneViz run BLAST automatically:
+Compare two genes in the same genome, with TE annotations, and let MicroSynViz run BLAST automatically:
 ```bash
 python Geneviz.py \
     --gene1 GeneA --gene2 GeneB \
@@ -231,7 +231,7 @@ python Geneviz.py \
     --auto_complementary \
     --output my_synteny
 ```
-Compare two regions in the same genome, with TE annotations, and let GeneViz run BLAST automatically:
+Compare two regions in the same genome, with TE annotations, and let MicroSynViz run BLAST automatically:
 ```bash
 python Geneviz.py \
     --region1 Chr1:1000-5000 --region2 Chr2 2000-6000 \
@@ -261,7 +261,7 @@ python genevis.py \
     --output cross_species
 ```
 ## 📤 Output Files
-All output files are named with the prefix given by `--output` (default: `GeneViz_result`).
+All output files are named with the prefix given by `--output` (default: `MicroSynViz_result`).
 | File | Description |
 |------|-------------|
 | `{prefix}_linkview.svg` | Vector graphic (SVG) of the synteny plot. |
@@ -269,10 +269,10 @@ All output files are named with the prefix given by `--output` (default: `GeneVi
 | `{prefix}_genes.fasta` | Extracted sequences for the two genes (with flanking regions). |
 | `{prefix}_blast.txt` | BLAST results used for plotting (tabular format). |
 ## 📝 Citation
-If you use GeneViz in your research, please cite:
+If you use MicroSynViz in your research, please cite:
 ```
 
 ```
 ## 📄 License
-GeneViz is released under the MIT License. See `LICENSE` for details.
+MicroSynViz is released under the MIT License. See `LICENSE` for details.
 
