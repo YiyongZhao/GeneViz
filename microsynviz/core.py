@@ -445,6 +445,34 @@ def check_file_exists(file_path):
         sys.stderr.write(f"[ERROR] File not found: {file_path}\n")
         sys.exit(1)
 
+def _find_gene_in_annos(gene_id, anno_files):
+    """Search multiple annotation files for a gene. Returns (chr, start, end, strand) or None."""
+    for anno_file in anno_files:
+        try:
+            fmt = detect_format(anno_file)
+            if fmt == 'bed':
+                result = extract_gene_from_bed(gene_id, anno_file)
+                if result:
+                    return result
+            else:
+                with open(anno_file, 'r') as f:
+                    for line in f:
+                        if line.startswith('#'):
+                            continue
+                        parts = line.strip().split('\t')
+                        if len(parts) != 9:
+                            continue
+                        if parts[2] != 'gene':
+                            continue
+                        att = parse_attributes(parts[8])
+                        if (att.get('ID') == gene_id or att.get('Name') == gene_id or
+                                att.get('gene_id') == gene_id or att.get('gene_name') == gene_id):
+                            return parts[0], int(parts[3]), int(parts[4]), parts[6]
+        except Exception:
+            continue
+    return None
+
+
 def extract_gene_coordinates(gene_id, anno_file):
     """Extract gene coordinates from GFF3, GTF, or BED file."""
     check_file_exists(anno_file)
@@ -1467,8 +1495,19 @@ def main():
     sys.stdout.write(f"  Region 2: genome={fasta2}, annotations={annos2}\n")
 
     if gene_mode:
-        chr1, start1, end1, strand1 = extract_gene_coordinates(args.gene1, annos1[0])
-        chr2, start2, end2, strand2 = extract_gene_coordinates(args.gene2, annos2[0])
+        # Search all annotation files for gene coordinates (not just the first one)
+        result1 = _find_gene_in_annos(args.gene1, annos1)
+        if not result1:
+            sys.stderr.write(f"[ERROR] Gene '{args.gene1}' not found in annotation files: {annos1}\n")
+            sys.exit(1)
+        chr1, start1, end1, strand1 = result1
+
+        result2 = _find_gene_in_annos(args.gene2, annos2)
+        if not result2:
+            sys.stderr.write(f"[ERROR] Gene '{args.gene2}' not found in annotation files: {annos2}\n")
+            sys.exit(1)
+        chr2, start2, end2, strand2 = result2
+
         seq1, seq1_start, seq1_end = extract_sequence_samtools(chr1, start1, end1, args.gene1, fasta1, args.extend)
         seq2, seq2_start, seq2_end = extract_sequence_samtools(chr2, start2, end2, args.gene2, fasta2, args.extend)
     else:  # region mode
