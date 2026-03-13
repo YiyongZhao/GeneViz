@@ -5,7 +5,7 @@ title: "MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Betwee
 version: 1.0.0
 date-released: "2026-03-01"
 license: MIT
-repository-code: "https://github.com/YiyongZhao/GeneViz"
+repository-code: "https://github.com/YiyongZhao/MicroSynViz"
 authors:
   - family-names: Zhao
     given-names: Yiyong

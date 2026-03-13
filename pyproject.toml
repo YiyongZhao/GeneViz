@@ -32,8 +32,8 @@ dependencies = [
 MicroSynViz = "microsynviz.MicroSynViz:main"
 
 [project.urls]
-Homepage = "https://github.com/YiyongZhao/GeneViz"
-Issues = "https://github.com/YiyongZhao/GeneViz/issues"
+Homepage = "https://github.com/YiyongZhao/MicroSynViz"
+Issues = "https://github.com/YiyongZhao/MicroSynViz/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -4,7 +4,7 @@ We welcome contributions! Here is how to get started.
 
 ## Reporting Bugs
 
-Please use [GitHub Issues](https://github.com/YiyongZhao/GeneViz/issues) and include:
+Please use [GitHub Issues](https://github.com/YiyongZhao/MicroSynViz/issues) and include:
 - MicroSynViz version (`MicroSynViz --version`)
 - Python version (`python --version`)
 - Operating system

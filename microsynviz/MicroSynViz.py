@@ -17,7 +17,7 @@ LOGO = r"""
  ╚═╝     ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚══════╝
 ###############################################################################################
 MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
-GitHub:  https://github.com/YiyongZhao/GeneViz
+GitHub:  https://github.com/YiyongZhao/MicroSynViz
 Contact: yiyong.zhao@yale.edu
 """
 
