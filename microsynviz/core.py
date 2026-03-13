@@ -47,6 +47,8 @@ import cairosvg
 from Bio import SeqIO
 from io import StringIO
 import pandas as pd
+import shutil
+import tempfile
 
 __version__ = "1.0.0"  # Updated version with region mode
 
@@ -524,6 +526,11 @@ def extract_sequence_samtools(chr_id, start, end, gene_id, genome_fa, extend=300
         sys.exit(1)
     fixed_fasta = [f">{gene_id}"] + lines[1:]
     seq_str = "\n".join(fixed_fasta)
+    # Adjust region_end based on actual extracted sequence length
+    actual_len = sum(len(l.strip()) for l in lines[1:])
+    actual_end = region_start + actual_len - 1
+    if actual_end < region_end:
+        region_end = actual_end
     return seq_str, region_start, region_end
 
 def extract_region_samtools(chr_id, start, end, genome_fa, extend=0):
@@ -545,6 +552,11 @@ def extract_region_samtools(chr_id, start, end, genome_fa, extend=0):
     if len(lines) < 2 or len(lines[1].strip()) == 0:
         sys.stderr.write(f"[ERROR] Empty sequence for region {region}\n")
         sys.exit(1)
+    # Adjust region_end based on actual extracted sequence length
+    actual_len = sum(len(l.strip()) for l in lines[1:])
+    actual_end = region_start + actual_len - 1
+    if actual_end < region_end:
+        region_end = actual_end
     # Use region identifier as FASTA header
     header = f">{chr_id}:{region_start}-{region_end}"
     fixed_fasta = [header] + lines[1:]
@@ -554,7 +566,6 @@ def extract_region_samtools(chr_id, start, end, genome_fa, extend=0):
 def run_blastn(seq_fasta, blast_out, evalue=1e-5, threads=8):
     """Run BLASTn with tabular output format 6."""
     check_file_exists(seq_fasta)
-    import tempfile
     tmp_dir = tempfile.mkdtemp(prefix="microsynviz_blast_")
     tmp_db = os.path.join(tmp_dir, "blast_db")
     makeblastdb_cmd = ["makeblastdb", "-in", seq_fasta, "-dbtype", "nucl", "-out", tmp_db]
@@ -575,8 +586,7 @@ def run_blastn(seq_fasta, blast_out, evalue=1e-5, threads=8):
         sys.exit(1)
     finally:
         # Cleanup temporary database directory
-        import shutil as _shutil
-        _shutil.rmtree(tmp_dir, ignore_errors=True)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 def read_sequence_lengths(fasta_file):
     """Return dictionary of sequence lengths from FASTA."""
@@ -1409,8 +1419,12 @@ def main():
     mRNA_info = {}
     te_info = []
 
+    # Setup logging
+    def log(msg):
+        if not args.quiet:
+            sys.stdout.write(msg if msg.endswith('\n') else msg + '\n')
+
     # Check external dependencies
-    import shutil
     for tool in ['samtools', 'blastn', 'makeblastdb']:
         if not shutil.which(tool):
             sys.stderr.write(f"[ERROR] '{tool}' not found in PATH. Install via: conda install -c bioconda samtools blast\n")
@@ -1599,7 +1613,7 @@ def main():
             seq_record.seq = seq_record.seq.reverse_complement()
             seq2 = seq_record.format("fasta")
             # Swap coordinates to maintain left<right
-            seq2_start, seq2_end = min(seq2_start, seq2_end), max(seq2_start, seq2_end)
+            seq2_start, seq2_end = min(seq2_start, seq2_end), max(seq2_start, seq2_end)  # ensure left < right
             revcomp2 = True
             # Write updated FASTA
             with open(seq_fasta, "w", encoding="utf-8") as f:
