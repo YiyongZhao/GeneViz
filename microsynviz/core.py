@@ -132,7 +132,12 @@ gene_info = {}      # gene_id -> {'chro':, 'strand':, 'gene':(s,e), 'mRNA':{mrna
 mRNA_info = {}      # mrna_id -> {'pos':(s,e), 'exon':[(s,e),...]}
 
 def parse_attributes(attr):
-    """Parse GFF attribute column into a dictionary."""
+    """Parse GFF3/GTF attribute column into a dictionary.
+
+    Supports both formats:
+      GFF3: ID=gene01;Name=ABC      (key=value separated by ;)
+      GTF:  gene_id "gene01"; transcript_id "t01";  (key "value" separated by ;)
+    """
     res = {}
     if not attr.endswith(';'):
         attr += ';'
@@ -142,12 +147,34 @@ def parse_attributes(attr):
         if c == '"':
             contentFlag = not contentFlag
         elif c == ';' and not contentFlag:
-            item = attr[lastPos:i]
-            tmpArr = item.split('=', 1)
-            key = tmpArr[0]
-            val = tmpArr[1].strip(' "') if len(tmpArr) >= 2 else None
-            res[key] = val
+            item = attr[lastPos:i].strip()
             lastPos = i + 1
+            if not item:
+                continue
+            # GFF3 format: key=value
+            if '=' in item and '"' not in item.split('=', 1)[0]:
+                tmpArr = item.split('=', 1)
+                key = tmpArr[0].strip()
+                val = tmpArr[1].strip(' "') if len(tmpArr) >= 2 else None
+            else:
+                # GTF format: key "value"
+                parts = item.split(None, 1)
+                if len(parts) == 2:
+                    key = parts[0].strip()
+                    val = parts[1].strip(' "')
+                elif len(parts) == 1:
+                    key = parts[0].strip()
+                    val = None
+                else:
+                    continue
+            res[key] = val
+            # GTF -> GFF3 key mapping
+            if key == 'gene_id' and 'ID' not in res:
+                res['ID'] = val
+            elif key == 'transcript_id':
+                if 'ID' not in res or res.get('gene_id') == res.get('ID'):
+                    res['ID'] = val
+                res.setdefault('Parent', res.get('gene_id', val))
     return res
 
 def parse_gene_gff(gff_file):
@@ -157,7 +184,7 @@ def parse_gene_gff(gff_file):
     """
     global gene_info, mRNA_info
     gene_type_name_set = {'gene', 'GENE'}
-    mRNA_type_name_set = {'mRNA', 'mrna', 'MRNA'}
+    mRNA_type_name_set = {'mRNA', 'mrna', 'MRNA', 'transcript'}
     exon_type_name_set = {'exon', 'EXON'}
 
     print(f"[INFO] Parsing gene GFF: {gff_file}")
@@ -268,28 +295,29 @@ def check_file_exists(file_path):
         sys.exit(1)
 
 def extract_gene_coordinates(gene_id, gff_file):
-    """Use awk to extract gene coordinates from GFF."""
+    """Extract gene coordinates from GFF3 or GTF file (pure Python, no awk)."""
     check_file_exists(gff_file)
-    awk_cmd = (
-        f"awk -v id=\"{gene_id}\" '$3==\"gene\" && "
-        f"($9 ~ \"ID=\"id\";\" || $9 ~ \"Name=\"id\";\" || "
-        f"$9 ~ \"ID=\"id\" \" || $9 ~ \"Name=\"id\" \") "
-        f"{{print $1, $4, $5, $7}}' {gff_file}"
-    )
-    try:
-        result = subprocess.check_output(awk_cmd, shell=True, encoding="utf-8").strip()
-    except subprocess.CalledProcessError:
-        sys.stderr.write(f"[ERROR] Failed to parse GFF file: {gff_file}\n")
-        sys.exit(1)
-    if not result:
-        sys.stderr.write(f"[ERROR] Gene {gene_id} not found in GFF file\n")
-        sys.exit(1)
-    fields = result.split()
-    if len(fields) != 4:
-        sys.stderr.write(f"[ERROR] Unexpected output from awk for gene {gene_id}: {result}\n")
-        sys.exit(1)
-    chr_id, start, end, strand = fields
-    return chr_id, int(start), int(end), strand
+    with open(gff_file, 'r') as f:
+        for line in f:
+            if line.startswith('#'):
+                continue
+            parts = line.strip().split('\t')
+            if len(parts) != 9:
+                continue
+            if parts[2] != 'gene':
+                continue
+            attr = parts[8]
+            # GFF3: ID=gene_id or Name=gene_id
+            # GTF: gene_id "gene_id"
+            att = parse_attributes(attr)
+            match = (att.get('ID') == gene_id or
+                     att.get('Name') == gene_id or
+                     att.get('gene_id') == gene_id or
+                     att.get('gene_name') == gene_id)
+            if match:
+                return parts[0], int(parts[3]), int(parts[4]), parts[6]
+    sys.stderr.write(f"[ERROR] Gene {gene_id} not found in {gff_file}\n")
+    sys.exit(1)
 
 def extract_sequence_samtools(chr_id, start, end, gene_id, genome_fa, extend=3000):
     """Extract genomic region using samtools faidx (gene mode)."""
@@ -1123,9 +1151,9 @@ def main():
     parser.add_argument("--g2", required=True, metavar='FASTA',
                         help="Genome FASTA for gene2/region2")
     parser.add_argument("--gffs1", nargs='+', required=True, metavar='GFF',
-                        help="GFF file(s) for gene1/region1 (gene annotation, TE annotation, etc.)")
+                        help="GFF/GTF file(s) for gene1/region1 (gene annotation, TE annotation, etc.)")
     parser.add_argument("--gffs2", nargs='+', required=True, metavar='GFF',
-                        help="GFF file(s) for gene2/region2 (gene annotation, TE annotation, etc.)")
+                        help="GFF/GTF file(s) for gene2/region2 (gene annotation, TE annotation, etc.)")
 
     # Legacy aliases (hidden, for backward compatibility)
     parser.add_argument("-g", "--genome", nargs='+', help=argparse.SUPPRESS)

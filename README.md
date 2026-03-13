@@ -114,12 +114,20 @@ MicroSynViz --help
 
 ### GFF3 Annotation
 
-Standard GFF3 format with `gene`, `mRNA`, `exon`, and/or TE features. MicroSynViz automatically detects gene structure and TE features from the same file — no need to separate them.
+Standard GFF3/GTF format with `gene`, `mRNA`, `exon`, and/or TE features. MicroSynViz automatically detects gene structure and TE features from the same file — no need to separate them.
 
 ```
 Chr1    MSU_osa1r7    gene    1000    2000    .    +    .    ID=LOC_Os01g01010
 Chr1    MSU_osa1r7    exon    1000    1200    .    +    .    Parent=LOC_Os01g01010.1
 Chr1    RepeatMasker  transposable_element  3000  3500  .  +  .  ID=TE001;Target="Motif:hAT"
+```
+
+GTF format is also supported:
+
+```
+Chr1    ensembl    gene    1000    2000    .    +    .    gene_id "ENSG001"; gene_name "ABC";
+Chr1    ensembl    transcript    1000    2000    .    +    .    gene_id "ENSG001"; transcript_id "ENST001";
+Chr1    ensembl    exon    1000    1200    .    +    .    gene_id "ENSG001"; transcript_id "ENST001";
 ```
 
 ### Genome FASTA
@@ -188,8 +196,8 @@ Run `MicroSynViz --help` to see all options.
 | `--region2` | str | Genomic region 2 (Chr:start-end) |
 | `--g1` | FASTA | Genome FASTA for region 1 |
 | `--g2` | FASTA | Genome FASTA for region 2 |
-| `--gffs1` | GFF+ | GFF file(s) for region 1 (gene, TE, etc.) |
-| `--gffs2` | GFF+ | GFF file(s) for region 2 (gene, TE, etc.) |
+| `--gffs1` | GFF+ | GFF/GTF file(s) for region 1 (gene, TE, etc.) |
+| `--gffs2` | GFF+ | GFF/GTF file(s) for region 2 (gene, TE, etc.) |
 | `--extend` | int | Flanking extension in bp (default: 3000) |
 
 ### BLAST
