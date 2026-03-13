@@ -91,16 +91,34 @@ style_css = {
                 stroke: #000000;
                 stroke-width: 1px;
             }
+            * {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            text {
+                paint-order: stroke;
+                stroke: white;
+                stroke-width: 5;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
             .feature_label {
-                font-size: 9px;
+                font-size: 20;
                 text-anchor: middle;
-                fill: #228B22;
+                fill: black;
             }
             .target_gene_label {
-                font-size: 9px;
+                font-size: 23;
                 text-anchor: middle;
-                fill: #FF0000;
+                fill: black; /* Carrot Orange */
                 font-weight: bold;
+            }
+            .pos_label {
+                font-size: 20;
+                fill: black;
+            }
+            .scale-text {
+                font-size: 18;
+                fill: black;
             }
         </style></defs>
     ''',
@@ -821,11 +839,11 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
                 bezier_coor3 = [v3[0], min(v3[1], v4[1]) + abs(v3[1] - v4[1]) / 3 * multipliers[2]]
                 bezier_coor4 = [v4[0], min(v3[1], v4[1]) + abs(v3[1] - v4[1]) / 3 * multipliers[3]]
                 svg_content_parts.append(
-                    f'<path d="M{v1[0]},{v1[1]} C{bezier_coor1[0]},{bezier_coor1[1]} {bezier_coor2[0]},{bezier_coor2[1]} {v2[0]},{v2[1]} L{v3[0]},{v3[1]} C{bezier_coor3[0]},{bezier_coor3[1]} {bezier_coor4[0]},{bezier_coor4[1]} {v4[0]},{v4[1]} Z" fill="{fill_color}" opacity="0.6"/>'
+                    f'<path d="M{v1[0]},{v1[1]} C{bezier_coor1[0]},{bezier_coor1[1]} {bezier_coor2[0]},{bezier_coor2[1]} {v2[0]},{v2[1]} L{v3[0]},{v3[1]} C{bezier_coor3[0]},{bezier_coor3[1]} {bezier_coor4[0]},{bezier_coor4[1]} {v4[0]},{v4[1]} Z" fill="{fill_color}" opacity="{args.ribbon_opacity}"/>'
                 )
             else:
                 svg_content_parts.append(
-                    f'<path d="M{v1[0]},{v1[1]} L{v2[0]},{v2[1]} L{v3[0]},{v3[1]} L{v4[0]},{v4[1]} Z" fill="{fill_color}" opacity="0.6"/>'
+                    f'<path d="M{v1[0]},{v1[1]} L{v2[0]},{v2[1]} L{v3[0]},{v3[1]} L{v4[0]},{v4[1]} Z" fill="{fill_color}" opacity="{args.ribbon_opacity}"/>'
                 )
     else:
         logger.info(" No relevant BLAST hits found between the two genes/regions.")
@@ -1335,8 +1353,10 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
             f'{"Bitscore" if color_metric == "bitscore" else "Identity (%)" if color_metric == "identity" else "-log10(E-value)"}</text>'
         )
 
-    # Assemble SVG
-    svg_content = f'<svg width="{args.svg_width}" height="{args.svg_height}" xmlns="http://www.w3.org/2000/svg" version="1.1">'
+    # Assemble SVG — physical size = A4 width (595.28pt), viewBox = virtual coords
+    phys_w = 595.28
+    phys_h = phys_w * args.svg_height / args.svg_width
+    svg_content = f'<svg width="{phys_w}pt" height="{phys_h:.1f}pt\" viewBox=\"0 0 {args.svg_width} {args.svg_height}" xmlns="http://www.w3.org/2000/svg" version="1.1">'
     svg_content += ''.join(svg_content_parts)
     svg_content += '</svg>'
 
@@ -1399,8 +1419,8 @@ def main():
                              'will be reversed and BLAST will be re-run. Default: off (keep original orientation).')
 
     # SVG appearance
-    parser.add_argument('--svg_height', default=800, type=int, help="SVG canvas height (default: 800)")
-    parser.add_argument('--svg_width', default=2000, type=int, help="SVG canvas width (default: 2000)")
+    parser.add_argument('--svg_height', default=800, type=float, help="SVG canvas height in virtual units (default: 800)")
+    parser.add_argument('--svg_width', default=2000, type=float, help="SVG canvas width in virtual units (default: 2000)")
     parser.add_argument('--svg_space', default=0.2, type=float, help="Fraction of width used as left/right margins (default: 0.2)")
     parser.add_argument('--chro_thickness', default=15, type=int, help="Thickness of chromosome rectangles (default: 15)")
     parser.add_argument('--label_font_size', default=18, type=int, help="Font size for scale bar (default: 18)")
@@ -1408,6 +1428,7 @@ def main():
     parser.add_argument('--no_scale', action="store_true", help="Omit scale bar")
     parser.add_argument('--gap', type=float, default=0, help="Gap between chromosome and hit polygons (default: 0)")
     parser.add_argument('--pos_label_x_offset', type=float, default=170, help="X offset for position labels (default: 170)")
+    parser.add_argument('--ribbon_opacity', default=0.1, type=float, help="Opacity of BLAST homology ribbons (0-1, default: 0.2)")
     parser.add_argument('--bezier', action="store_true", help="Use Bezier curves for hit polygons")
 
     # TE track options
