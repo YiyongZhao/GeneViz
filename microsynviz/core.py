@@ -363,8 +363,14 @@ def read_sequence_lengths(fasta_file):
     seq_dict = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
     return {gene_id: len(seq) for gene_id, seq in seq_dict.items()}
 
-def parse_blast_results(blast_file):
-    """Parse BLAST tabular output (outfmt 6) into list of dicts."""
+def parse_blast_results(blast_file, min_identity=0, min_length=0):
+    """Parse BLAST tabular output (outfmt 6) into list of dicts.
+    
+    Args:
+        blast_file: Path to BLAST outfmt 6 file
+        min_identity: Minimum percent identity to keep (default: 0)
+        min_length: Minimum alignment length in bp to keep (default: 0)
+    """
     blast_hits = []
     if os.path.exists(blast_file) and os.path.getsize(blast_file) > 0:
         blast_cols = [
@@ -372,6 +378,15 @@ def parse_blast_results(blast_file):
             "qstart", "qend", "sstart", "send", "evalue", "bitscore"
         ]
         df = pd.read_csv(blast_file, sep="\t", names=blast_cols)
+        n_total = len(df)
+        if min_identity > 0:
+            df = df[df["pident"] >= min_identity]
+        if min_length > 0:
+            df = df[df["length"] >= min_length]
+        n_kept = len(df)
+        if n_total > 0:
+            sys.stdout.write(f"[MicroSynViz] BLAST hits: {n_total} total, {n_kept} passed filters "
+                           f"(identity >= {min_identity}%, length >= {min_length} bp)\n")
         blast_hits = df.to_dict("records")
     return blast_hits
 
@@ -1104,6 +1119,8 @@ def main():
 
     # BLAST options
     parser.add_argument("--evalue", type=float, default=1e-5, help="BLAST e-value threshold (default: 1e-5)")
+    parser.add_argument("--identity", type=float, default=50, help="Minimum BLAST identity %% to display (default: 50)")
+    parser.add_argument("--alignment_length", type=int, default=5, help="Minimum alignment length in bp to display (default: 5)")
     parser.add_argument("--threads", type=int, default=8, help="Number of threads for BLAST (default: 8)")
     parser.add_argument("--blast_result", help="Pre-computed BLAST output (outfmt 6); if not given, BLAST is run automatically")
     parser.add_argument("--auto_complementary", action='store_true',
@@ -1281,7 +1298,7 @@ def main():
 
     sys.stdout.write("[Step 3a/4] Running initial BLASTn alignment...\n")
     run_blastn(seq_fasta, blast_out, args.evalue, args.threads)
-    blast_hits = parse_blast_results(blast_out)
+    blast_hits = parse_blast_results(blast_out, min_identity=args.identity, min_length=args.alignment_length)
 
     # If auto_complementary enabled, decide whether to reverse second sequence
     if args.auto_complementary:
@@ -1327,7 +1344,7 @@ def main():
             # Re-run BLAST
             sys.stdout.write("[Step 3b/4] Re-running BLASTn with reversed sequence...\n")
             run_blastn(seq_fasta, blast_out, args.evalue, args.threads)
-            blast_hits = parse_blast_results(blast_out)   # update
+            blast_hits = parse_blast_results(blast_out, min_identity=args.identity, min_length=args.alignment_length)   # update
     else:
         sys.stdout.write("[INFO] --auto_complementary not specified: keeping original orientation, skipping direction adjustment.\n")
 
