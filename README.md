@@ -170,8 +170,8 @@ Then pass it to MicroSynViz:
 
 ```bash
 MicroSynViz --gene1 A --gene2 B \
-    --g1 genome.fa --annos1 anno.gff \
-    --g2 genome.fa --annos2 anno.gff \
+    --fa1 genome.fa --annos1 anno.gff \
+    --fa2 genome.fa --annos2 anno.gff \
     --blast_result my_blast.txt
 ```
 
@@ -187,8 +187,8 @@ MicroSynViz --gene1 A --gene2 B \
 MicroSynViz \
     --gene1 LOC_Os06g50440 \
     --gene2 LOC_Os06g50789 \
-    --g1 genome.fa --annos1 annotation.gff TEs.gff \
-    --g2 genome.fa --annos2 annotation.gff TEs.gff \
+    --fa1 genome.fa --annos1 annotation.gff TEs.gff \
+    --fa2 genome.fa --annos2 annotation.gff TEs.gff \
     --auto_complementary --bezier \
     --output my_synteny
 ```
@@ -199,8 +199,8 @@ MicroSynViz \
 MicroSynViz \
     --gene1 GeneA \
     --gene2 GeneB \
-    --g1 rice.fa --annos1 rice.gff rice_te.gff \
-    --g2 maize.fa --annos2 maize.gff maize_te.gff \
+    --fa1 rice.fa --annos1 rice.gff rice_te.gff \
+    --fa2 maize.fa --annos2 maize.gff maize_te.gff \
     --auto_complementary --bezier \
     --output cross_species
 ```
@@ -211,13 +211,13 @@ MicroSynViz \
 MicroSynViz \
     --region1 Chr1:1000-5000 \
     --region2 Chr2:3000-8000 \
-    --g1 genome.fa --annos1 annotation.gff \
-    --g2 genome.fa --annos2 annotation.gff \
+    --fa1 genome.fa --annos1 annotation.gff \
+    --fa2 genome.fa --annos2 annotation.gff \
     --extend 5000 \
     --output region_synteny
 ```
 
-> **Design principle**: each region is self-contained with `--g1/--annos1` and `--g2/--annos2`. For single-species, simply provide the same files for both. GFF files are auto-parsed for both gene structure and TE features.
+> **Design principle**: each region is self-contained with `--fa1/--annos1` and `--fa2/--annos2`. For single-species, simply provide the same files for both. GFF files are auto-parsed for both gene structure and TE features.
 
 ---
 
@@ -233,8 +233,8 @@ Run `MicroSynViz --help` to see all options.
 | `--gene2` | str | Gene ID for region 2 |
 | `--region1` | str | Genomic region 1 (Chr:start-end) |
 | `--region2` | str | Genomic region 2 (Chr:start-end) |
-| `--g1` | FASTA | Genome FASTA for region 1 |
-| `--g2` | FASTA | Genome FASTA for region 2 |
+| `--fa1` | FASTA | FASTA file for region 1 (genome or CDS/transcript) |
+| `--fa2` | FASTA | FASTA file for region 2 (genome or CDS/transcript) |
 | `--annos1` | FILE+ | Annotation file(s) for region 1 (gene, TE, etc.) |
 | `--annos2` | FILE+ | Annotation file(s) for region 2 (gene, TE, etc.) |
 | `--extend` | int | Flanking extension in bp (default: 3000) |

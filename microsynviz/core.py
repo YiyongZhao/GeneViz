@@ -26,20 +26,20 @@ Dependencies:
 
 Usage example (gene mode, single species):
     MicroSynViz --gene1 GeneA --gene2 GeneB \\
-        --g1 genome.fa --annos1 genes.gff TEs.gff \\
-        --g2 genome.fa --annos2 genes.gff TEs.gff \\
+        --fa1 genome.fa --annos1 genes.gff TEs.gff \\
+        --fa2 genome.fa --annos2 genes.gff TEs.gff \\
         --auto_complementary --output my_synteny
 
 Usage example (gene mode, cross species):
     MicroSynViz --gene1 GeneA --gene2 GeneB \\
-        --g1 species1.fa --annos1 sp1_genes.gff sp1_TEs.gff \\
-        --g2 species2.fa --annos2 sp2_genes.gff sp2_TEs.gff \\
+        --fa1 species1.fa --annos1 sp1_genes.gff sp1_TEs.gff \\
+        --fa2 species2.fa --annos2 sp2_genes.gff sp2_TEs.gff \\
         --auto_complementary --output cross_synteny
 
 Usage example (region mode):
     MicroSynViz --region1 "Chr1:1000-2000" --region2 "Chr2:3000-4000" \\
-        --g1 genome.fa --annos1 genes.gff \\
-        --g2 genome.fa --annos2 genes.gff \\
+        --fa1 genome.fa --annos1 genes.gff \\
+        --fa2 genome.fa --annos2 genes.gff \\
         --extend 5000 --output region_synteny
 
 All parameters use long option style (--xxxx).
@@ -1411,9 +1411,13 @@ def main():
     parser.add_argument("--extend", type=int, default=3000, help="Bases to extend around genes/regions (default: 3000)")
 
     # Per-region input files
-    parser.add_argument("--g1", default=None, metavar='FASTA',
+    parser.add_argument("--fa1", default=None, metavar='FASTA',
                         help="FASTA file for region 1 (genome or CDS/transcript). Takes priority over legacy flags.")
+    parser.add_argument("--g1", default=None, metavar='FASTA',
+                        help=argparse.SUPPRESS)  # Legacy alias for --fa1
     parser.add_argument("--g2", default=None, metavar='FASTA',
+                        help=argparse.SUPPRESS)  # Legacy alias for --fa2
+    parser.add_argument("--fa2", default=None, metavar='FASTA',
                         help="FASTA file for region 2 (genome or CDS/transcript). Takes priority over legacy flags.")
     parser.add_argument("--annos1", nargs='+', default=None, metavar='FILE',
                         help="Annotation file(s) for region 1 (GFF3, GTF, BED). Optional for CDS/sequence FASTA.")
@@ -1514,10 +1518,10 @@ def main():
         region_mode = False
 
     # ===================== Resolve input files =====================
-    # Primary: --g1/--g2 + --annos1/--annos2
+    # Primary: --fa1/--fa2 + --annos1/--annos2 (--g1/--g2 are legacy aliases)
     # Legacy fallback: --genome, --gff, --te, --fasta*, --gff*, --te_gff*, --gffs*
-    fasta1 = getattr(args, 'g1', None)
-    fasta2 = getattr(args, 'g2', None)
+    fasta1 = getattr(args, 'fa1', None) or getattr(args, 'g1', None)
+    fasta2 = getattr(args, 'fa2', None) or getattr(args, 'g2', None)
     annos1 = list(args.annos1) if getattr(args, 'annos1', None) else []
     annos2 = list(args.annos2) if getattr(args, 'annos2', None) else []
 
@@ -1568,7 +1572,7 @@ def main():
 
     # Validate
     if not fasta1 or not fasta2:
-        raise InputError("Genome FASTA required. Use --g1/--g2 (or legacy --genome/-g).")
+        raise InputError("Genome FASTA required. Use --fa1/--fa2 (or legacy --g1/--g2/--genome).")
     # annos are optional — CDS FASTA mode works without annotations
     if not annos1:
         annos1 = []
