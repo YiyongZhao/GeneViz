@@ -24,14 +24,22 @@ Dependencies:
     samtools (command-line)
     blastn (command-line)
 
-Usage example (gene mode):
-    MicroSynViz_core.py --gene1 GeneA --gene2 GeneB \\
-        --gff species.gff --fasta genome.fasta --te_gff TEs.gff \\
+Usage example (gene mode, single species):
+    MicroSynViz --gene1 GeneA --gene2 GeneB \\
+        --g1 genome.fa --annos1 genes.gff TEs.gff \\
+        --g2 genome.fa --annos2 genes.gff TEs.gff \\
         --auto_complementary --output my_synteny
 
+Usage example (gene mode, cross species):
+    MicroSynViz --gene1 GeneA --gene2 GeneB \\
+        --g1 species1.fa --annos1 sp1_genes.gff sp1_TEs.gff \\
+        --g2 species2.fa --annos2 sp2_genes.gff sp2_TEs.gff \\
+        --auto_complementary --output cross_synteny
+
 Usage example (region mode):
-    MicroSynViz_core.py --region1 "Chr1:1000-2000" --region2 "Chr2:3000-4000" \\
-        --gff species.gff --fasta genome.fasta --te_gff TEs.gff \\
+    MicroSynViz --region1 "Chr1:1000-2000" --region2 "Chr2:3000-4000" \\
+        --g1 genome.fa --annos1 genes.gff \\
+        --g2 genome.fa --annos2 genes.gff \\
         --extend 5000 --output region_synteny
 
 All parameters use long option style (--xxxx).
