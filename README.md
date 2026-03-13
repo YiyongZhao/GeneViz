@@ -131,6 +131,7 @@ Run `MicroSynViz --help` to see all options.
 | `--evalue` | float | 1e-5 | BLAST e-value threshold |
 | `--identity` | float | 50 | Minimum BLAST identity % to display |
 | `--alignment_length` | int | 5 | Minimum alignment length in bp |
+| `--color_by` | choice | bitscore | Ribbon color metric: `bitscore`, `identity`, or `evalue` |
 | `--threads` | int | 4 | BLAST threads |
 | `--auto_complementary` | flag | — | Auto-detect reverse complement |
 | `--bezier` | flag | — | Use Bezier curves for ribbons |

@@ -443,7 +443,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
     svg_content_parts = []
     svg_content_parts.append(re.sub(r'\s+', '', style_css['simple']))
 
-    # Gradient definition for bitscore legend
+    # Gradient definition for color legend
     svg_content_parts.append('''
         <defs>
             <linearGradient id="grayPurpleRedGradient" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -488,15 +488,22 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
             g2_start_abs = seq2_start + hit['qstart'] - 1
             g2_end_abs   = seq2_start + hit['qend'] - 1
         key = (g1_start_abs, g1_end_abs, g2_start_abs, g2_end_abs)
-        if key not in unique_hits or hit['bitscore'] > unique_hits[key]['bitscore']:
+        if key not in unique_hits or hit['bitscore'] > unique_hits[key]['bitscore']:  # always dedup by bitscore
             unique_hits[key] = hit
 
     relevant_hits = list(unique_hits.values())
 
-    # Bitscore range for legend
+    # Score range for legend (based on --color_by)
+    color_metric = args.color_by
     legend_min = legend_max = None
+    invert_color = False  # True for evalue (lower = better)
     if relevant_hits:
-        scores = [hit['bitscore'] for hit in relevant_hits]
+        scores = [hit[color_metric if color_metric != 'identity' else 'pident'] for hit in relevant_hits]
+        if color_metric == 'evalue':
+            invert_color = True
+            # Use -log10(evalue) for color mapping (higher = better match)
+            import math
+            scores = [-math.log10(max(s, 1e-300)) for s in scores]
         legend_min = min(scores)
         legend_max = max(scores)
 
@@ -519,9 +526,16 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
                 g2_start_abs = seq2_start + hit['qstart'] - 1
                 g2_end_abs   = seq2_start + hit['qend'] - 1
 
-            # Normalize bitscore
+            # Normalize score for color mapping
+            if color_metric == 'evalue':
+                import math
+                score_val = -math.log10(max(hit['evalue'], 1e-300))
+            elif color_metric == 'identity':
+                score_val = hit['pident']
+            else:
+                score_val = hit['bitscore']
             if legend_max > legend_min:
-                norm = (hit['bitscore'] - legend_min) / (legend_max - legend_min)
+                norm = (score_val - legend_min) / (legend_max - legend_min)
             else:
                 norm = 0.5
 
@@ -1057,7 +1071,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
         svg_content_parts.append(add_axis(chro1, 'top'))
         svg_content_parts.append(add_axis(chro2, 'bottom'))
 
-    # -------------------------- Bitscore legend --------------------------
+    # -------------------------- Color legend --------------------------
     if legend_min is not None and legend_max is not None:
         legend_width = 25
         legend_height = (top2 + args.chro_thickness - top1)
@@ -1068,13 +1082,14 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
             f'<rect x="{legend_x}" y="{legend_y}" width="{legend_width}" height="{legend_height}" fill="url(#grayPurpleRedGradient)" stroke="black" stroke-width="1"/>'
         )
         svg_content_parts.append(
-            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + 12}" fill="black" font-size="10" text-anchor="start">{legend_max:.1f}</text>'
+            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + 12}" fill="black" font-size="10" text-anchor="start">{legend_max:.1f}{"%%" if color_metric == "identity" else ""}</text>'
         )
         svg_content_parts.append(
-            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + legend_height - 5}" fill="black" font-size="10" text-anchor="start">{legend_min:.1f}</text>'
+            f'<text x="{legend_x + legend_width + 5}" y="{legend_y + legend_height - 5}" fill="black" font-size="10" text-anchor="start">{legend_min:.1f}{"%%" if color_metric == "identity" else ""}</text>'
         )
         svg_content_parts.append(
-            f'<text x="{legend_x}" y="{legend_y - 10}" fill="black" font-size="11" text-anchor="start">Bitscore</text>'
+            f'<text x="{legend_x}" y="{legend_y - 10}" fill="black" font-size="11" text-anchor="start">'
+            f'{"Bitscore" if color_metric == "bitscore" else "Identity (%)" if color_metric == "identity" else "-log10(E-value)"}</text>'
         )
 
     # Assemble SVG
@@ -1121,6 +1136,8 @@ def main():
     parser.add_argument("--evalue", type=float, default=1e-5, help="BLAST e-value threshold (default: 1e-5)")
     parser.add_argument("--identity", type=float, default=50, help="Minimum BLAST identity %% to display (default: 50)")
     parser.add_argument("--alignment_length", type=int, default=5, help="Minimum alignment length in bp to display (default: 5)")
+    parser.add_argument("--color_by", choices=["bitscore", "identity", "evalue"], default="bitscore",
+                        help="Metric for ribbon color gradient: bitscore (default), identity, or evalue")
     parser.add_argument("--threads", type=int, default=8, help="Number of threads for BLAST (default: 8)")
     parser.add_argument("--blast_result", help="Pre-computed BLAST output (outfmt 6); if not given, BLAST is run automatically")
     parser.add_argument("--auto_complementary", action='store_true',
