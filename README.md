@@ -148,6 +148,35 @@ Must be indexed with `samtools faidx`:
 samtools faidx genome.fasta
 ```
 
+### Pre-computed BLAST Result (optional)
+
+By default, MicroSynViz runs BLASTN automatically. If you want to provide your own BLAST result (e.g., with custom parameters), use `--blast_result`:
+
+The file must be in **BLAST tabular format** (`-outfmt 6`), with 12 tab-separated columns:
+
+```
+qseqid  sseqid  pident  length  mismatch  gapopen  qstart  qend  sstart  send  evalue  bitscore
+```
+
+Generate it with:
+
+```bash
+blastn -query region1.fa -subject region2.fa \
+    -outfmt 6 -evalue 1e-5 -num_threads 8 \
+    -out my_blast.txt
+```
+
+Then pass it to MicroSynViz:
+
+```bash
+MicroSynViz --gene1 A --gene2 B \
+    --g1 genome.fa --annos1 anno.gff \
+    --g2 genome.fa --annos2 anno.gff \
+    --blast_result my_blast.txt
+```
+
+> **Note**: When `--blast_result` is provided, `--evalue` and `--threads` are ignored (BLAST is skipped). Post-filters `--identity` and `--alignment_length` still apply.
+
 ---
 
 ## Quick Start
@@ -219,7 +248,7 @@ Run `MicroSynViz --help` to see all options.
 | `--alignment_length` | int | 5 | Minimum alignment length (bp) |
 | `--color_by` | choice | bitscore | Ribbon color: `bitscore`, `identity`, or `evalue` |
 | `--threads` | int | 8 | BLAST threads |
-| `--blast_result` | str | — | Pre-computed BLAST (skip auto-BLAST) |
+| `--blast_result` | FILE | — | Pre-computed BLAST tabular result (`-outfmt 6`); skips auto-BLAST |
 | `--auto_complementary` | flag | — | Auto-detect reverse complement |
 
 ### Appearance
@@ -237,10 +266,9 @@ Run `MicroSynViz --help` to see all options.
 
 | File | Description |
 |------|-------------|
-| `*_linkview.svg` | Vector SVG figure |
-| `*_linkview.pdf` | Vector PDF (via CairoSVG) |
+| `*_linkview.pdf` | Publication-ready vector PDF figure |
 | `*_genes.fasta` | Extracted sequences |
-| `*_blast.txt` | BLAST tabular results |
+| `*_blast.txt` | BLAST tabular results (outfmt 6) |
 
 ---
 
