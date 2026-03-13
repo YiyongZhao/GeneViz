@@ -1,11 +1,10 @@
 # MicroSynViz Documentation
 
-Full documentation: https://geneviz.readthedocs.io
+For full documentation, see the [README](../README.md).
 
 ## Quick Links
 
-- [Installation](../README.md#installation)
-- [Module Reference](../README.md#command-line-options)
-- [Example Data](../example_data/)
+- [Installation](../README.md#-installation)
+- [Usage](../README.md#-quick-start)
+- [Command-line Options](../README.md#-command-line-options)
 - [Changelog](CHANGELOG.md)
-- [Contributing](../CONTRIBUTING.md)

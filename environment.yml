@@ -1,15 +1,15 @@
 name: MicroSynViz
 channels:
+  - bioconda
   - conda-forge
   - defaults
 dependencies:
-  - python>=3.8,<3.13
+  - python>=3.8
   - pip
-  - numpy
   - pandas
-  - scipy
-  - matplotlib>=3.5
   - biopython
   - cairosvg
+  - samtools
+  - blast
   - pip:
-      - MicroSynViz
+      - -e .

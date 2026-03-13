@@ -1,7 +1,7 @@
 #!/bin/bash
-# MicroSynViz 示例：比较 LOC_Os06g50440 和 LOC_Os06g50789
+# MicroSynViz example: Single-species comparison
 
-python ./MicroSynViz.py \
+MicroSynViz \
     --gene1 LOC_Os06g50440 \
     --gene2 LOC_Os06g50789 \
     --gff gene_subset.gff \

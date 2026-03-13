@@ -1,11 +1,9 @@
 #!/bin/bash
-# Cross-species example using --region mode with simulated species
+# MicroSynViz example: Cross-species comparison
 
 cd "$(dirname "$0")"
 
-# Get sequence lengths for region endpoints
-
-python MicroSynViz.py \
+MicroSynViz \
     --region1 SpeciesA_Chr1:4901-6596 \
     --region2 SpeciesB_Chr7:4901-14119 \
     --gff1 speciesA.gff \

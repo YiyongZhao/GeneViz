@@ -1,278 +1,261 @@
 ```
 ###############################################################################################
-  ██████╗ ███████╗███╗   ██╗███████╗██╗   ██╗██╗███████╗
- ██╔════╝ ██╔════╝████╗  ██║██╔════╝██║   ██║██║╚══███╔╝
- ██║  ███╗█████╗  ██╔██╗ ██║█████╗  ██║   ██║██║  ███╔╝
- ██║   ██║██╔══╝  ██║╚██╗██║██╔══╝  ╚██╗ ██╔╝██║ ███╔╝
- ╚██████╔╝███████╗██║ ╚████║███████╗  ╚████╔╝ ██║███████╗
-  ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚══════╝   ╚═══╝  ╚═╝╚══════╝
+ ███╗   ███╗██╗ ██████╗██████╗  ██████╗ ███████╗██╗   ██╗███╗   ██╗██╗   ██╗██╗███████╗
+ ████╗ ████║██║██╔════╝██╔══██╗██╔═══██╗██╔════╝╚██╗ ██╔╝████╗  ██║██║   ██║██║╚══███╔╝
+ ██╔████╔██║██║██║     ██████╔╝██║   ██║███████╗ ╚████╔╝ ██╔██╗ ██║██║   ██║██║  ███╔╝
+ ██║╚██╔╝██║██║██║     ██╔══██╗██║   ██║╚════██║  ╚██╔╝  ██║╚██╗██║╚██╗ ██╔╝██║ ███╔╝
+ ██║ ╚═╝ ██║██║╚██████╗██║  ██║╚██████╔╝███████║   ██║   ██║ ╚████║ ╚████╔╝ ██║███████╗
+ ╚═╝     ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚══════╝
 ###############################################################################################
 ```
 
 # MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
 
-[![Python](https://img.shields.io/badge/Python-3.6+-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
-> **GitHub**: https://github.com/yiyongzhao/GeneViz  
-> **License**: MIT | **Release Date**: 2026-03-12
-
----
-
-## 📖 Table of Contents
-
-- [What does MicroSynViz do?](#-what-does-microsynviz-do)
-- [Key Features](#-key-features)
-- [Dependencies](#-dependencies)
-- [Installation](#-installation)
-  - [Option 1: Direct script usage (simplest)](#option-1-direct-script-usage-simplest)
-  - [Option 2: Install via pip (from GitHub)](#option-2-install-via-pip-from-github)
-  - [Option 3: Install via pip (from PyPI)](#option-3-install-via-pip-from-pypi)
-- [Input File Formats](#-input-file-formats)
-- [Command Line Arguments](#-command-line-arguments)
-- [Usage Examples](#-usage-examples)
-  - [Single‑species comparison](#single‑species-comparison)
-  - [Cross‑species comparison](#cross‑species-comparison)
-  - [Including TE tracks](#including-te-tracks)
-  - [Automatic reverse complement](#automatic-reverse-complement)
-- [Output Files](#-output-files)
-- [Packaging & Publishing (for developers)](#-packaging--publishing-for-developers)
-- [Citation](#-citation)
-- [License](#-license)
----
-
-## 🔬 What does MicroSynViz do?
-
-MicroSynViz is a lightweight yet powerful Python script that generates **publication‑quality pairwise microsynteny plots** for any two genomic regions, within the same species or across different species. It combines:
-
-- **BLAST‑based homology** ribbons (colored by bitscore)
-- **Gene structure** (exons/introns with direction arrows)
-- **Transposable element (TE)** tracks with motif labels
-- **Automatic orientation detection** (reverse‑complement when needed)
-- **Core region highlighting** (e.g., conserved domains)
-
-All you need are GFF annotation files, a genome FASTA, and BLAST output (optional – the script can run BLAST for you). MicroSynViz produces SVG and PDF vector figures ready for publication.
+> **GitHub**: https://github.com/YiyongZhao/MicroSynViz
+> **License**: MIT
 
 ---
 
-## ✨ Key Features
+## Table of Contents
 
-- **Single‑species or cross‑species** – compare genes on the same genome or between two different genomes.
-- **Automatic reverse complement** – detects if the second region should be flipped based on BLAST hit directions.
-- **TE track** – draws transposable elements above/below the chromosome, extracts motif names from GFF attributes.
-- **Gene structure** – shows exons (colored boxes) and introns (lines), with an arrow indicating transcription direction.
-- **Core range highlighting** – mark a specific interval (e.g., protein domain) in red within genes.
-- **BLAST ribbon coloring** – polygons connecting homologous regions, colored by bitscore (gray → purple → red).
-- **Vector output** – SVG and PDF (via `cairosvg`) for easy editing.
-- **Highly customizable** – dozens of command‑line options to control sizes, colors, gaps, etc.
-- **No complex installation** – just a single Python script; all Python dependencies are listed in `requirements.txt`.
+- [What does MicroSynViz do?](#what-does-microsynviz-do)
+- [Key Features](#key-features)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Input Files](#input-files)
+- [Quick Start](#quick-start)
+- [Command-line Options](#command-line-options)
+- [Output Files](#output-files)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 📦 Dependencies
+## What does MicroSynViz do?
 
-### Python packages
-- `biopython`
-- `pandas`
-- `cairosvg` (for PDF conversion)
+MicroSynViz provides a reproducible workflow for visualizing **pairwise genomic microsynteny** between any two genomic regions within or across species. It integrates BLASTN-based sequence homology with genome annotation to generate publication-quality linkview plots, enabling intuitive classification of gene duplication types (transposed, segmental, tandem) and mechanistic inference of transposable element involvement.
 
-### External command‑line tools (must be installed separately and in `PATH`)
-- `samtools` (≥1.9)
-- `blastn` (NCBI BLAST+ ≥2.10)
+All you need are GFF annotation files, a genome FASTA, and optionally a TE annotation. MicroSynViz produces SVG and PDF vector figures ready for publication.
 
-Install Python dependencies with:
-```bash
-pip install biopython pandas cairosvg
-```
-Install external tools via conda (recommended):
+---
+
+## Key Features
+
+- **Single-species and cross-species** pairwise microsynteny comparison
+- **Two input modes**: gene IDs (`--gene1/--gene2`) or genomic regions (`--region1/--region2`)
+- **Automatic reverse complement** detection based on BLAST alignment orientation
+- **TE track** with motif labels for transposable element visualization
+- **Gene structure** (exons/introns) visualization from GFF3 annotation
+- **Core range highlighting** for focused synteny regions
+- **SVG and PDF output** (vector graphics via CairoSVG)
+- **Bezier curve** rendering for smooth homology ribbons
+
+---
+
+## Dependencies
+
+### Python packages (installed automatically via pip)
+
+- Python >= 3.8
+- pandas
+- BioPython
+- CairoSVG
+
+### External tools (must be in PATH)
+
+- **samtools** >= 1.10 — for FASTA region extraction
+- **blastn** (NCBI BLAST+) — for sequence homology search
+
+Install external tools via conda:
+
 ```bash
 conda install -c bioconda samtools blast
 ```
-or via your system package manager (e.g., apt-get install samtools ncbi-blast+ on Ubuntu).
-## 🛠 Installation
-### Option 1: Direct script usage (simplest)
 
-1.Download the genevis.py script from the GitHub repository.
+---
 
-2.Install Python dependencies: pip install biopython pandas cairosvg.
+## Installation
 
-3.Ensure samtools and blastn are installed and accessible.
+### Option 1: Install via pip (from GitHub)
 
-4.Run the script with:
 ```bash
-python Geneviz.py --help
+pip install git+https://github.com/YiyongZhao/MicroSynViz.git
+MicroSynViz --help
 ```
 
-### Option 2: Install via pip (from GitHub)
-Clone the repository and install in editable mode (this makes the genevis command available):
+### Option 2: Install via conda environment
+
 ```bash
-git clone https://github.com/yourusername/GeneViz.git
-cd GeneViz  # repository name
+git clone https://github.com/YiyongZhao/MicroSynViz.git
+cd MicroSynViz
+conda env create -f environment.yml
+conda activate MicroSynViz
 pip install -e .
+MicroSynViz --help
 ```
-Now you can run genevis from anywhere:
+
+### Option 3: Direct script usage
+
 ```bash
-Geneviz --help
+git clone https://github.com/YiyongZhao/MicroSynViz.git
+cd MicroSynViz
+pip install pandas biopython cairosvg
+python -m microsynviz --help
 ```
-### Option 3: Install via pip (from PyPI)
-If the package is uploaded to PyPI:
-```bash
-pip install MicroSynViz
-genevis --help
-```
-## 📁 Input File Formats
+
+---
+
+## Input Files
+
 MicroSynViz requires several input files. All are plain text; please follow the exact formats.
-### 1. Gene pair & Region specification
-#### - Gene pair specification:
-The two gene IDs are supplied directly via `--gene1` and `--gene2`. No separate pair file is needed. Use:
-```bash
---gene1 GeneID-1
---gene2 GeneID-2
-```
-#### - Region specification：
-To mark a specific sub-region on each chromosome (e.g., a conserved domain), use:
-```bash
---region1 Chr:start-end #for the first region
---region2 Chr:start-end #for the second region
-```
-Genes overlapping these intervals will be drawn in red (target color).
 
-### 2. GFF3 annotation file(s)
-- For single‑species mode: `--gff`
-- For cross‑species mode: `--gff1` and `--gff2`
-The GFF must contain `gene` features with an `ID` attribute (or `Name`). Exon/intron structures are extracted from `mRNA` and `exon` features. Example:
-```text
-Chr1    .       gene    1000    2000    .       +       .       ID=GeneA
-Chr1    .       mRNA    1000    2000    .       +       .       ID=GeneA.1;Parent=GeneA
-Chr1    .       exon    1000    1200    .       +       .       Parent=GeneA.1
-Chr1    .       exon    1500    2000    .       +       .       Parent=GeneA.1
-```
-### 3. Genome FASTA file(s)
-- For single‑species mode: `--fasta`
-- For cross‑species mode: `--fasta1` and `--fasta2`
-The FASTA must be indexed with `samtools faidx` (run `samtools faidx genome.fasta` beforehand). MicroSynViz will extract the region around each gene using `samtools`.
-### 4. TE GFF file(s) (optional)
-- For single‑species mode: `--te_gff`
-- For cross‑species mode: `--te_gff1` and `--te_gff2`
+### 1. GFF3 Annotation
 
-If the attribute contains `Target "Motif:xxx"`, the motif name is displayed; otherwise "unknown". We recommend using the RepeatMasker annotation output file (.out.gff format) as input. Example:
-```text
-##gff-version 3
-##sequence-region Chr1 1 43270923
-Chr1	RepeatMasker	dispersed_repeat	2762	2924	 9.2	-	.	ID=1;Target "Motif:Harbinger-N11_OS" 1 171
-Chr1	RepeatMasker	dispersed_repeat	18790	18926	 2.9	+	.	ID=2;Target "Motif:LINE1-N1F_OS" 1480 1616
-Chr1	RepeatMasker	dispersed_repeat	20731	20772	 7.3	-	.	ID=3;Target "Motif:MuDR-N18H_OS" 2627 2669
-Chr1	RepeatMasker	dispersed_repeat	22455	22538	 9.9	-	.	ID=4;Target "Motif:hAT-N43B_OS" 2135 2228
-Chr1	RepeatMasker	dispersed_repeat	27884	27974	10.0	+	.	ID=5;Target "Motif:EnSpm-11_OS" 4064 4156
-Chr1	RepeatMasker	dispersed_repeat	27895	28006	 7.2	+	.	ID=6;Target "Motif:HELITRON7_OS" 1599 1713
-Chr1	RepeatMasker	dispersed_repeat	28732	28974	 8.7	-	.	ID=7;Target "Motif:Harbinger-N9_OS" 1 231
-Chr1	RepeatMasker	dispersed_repeat	30292	30684	 1.0	-	.	ID=8;Target "Motif:ECR" 1 395
+Standard GFF3 format with `gene`, `mRNA`, and `exon` features. The `ID=` attribute in column 9 is used to identify genes.
+
 ```
-## ⚙️ Command Line Arguments
-Run python Geneviz.py --help to see all options.
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| **`--gene1`** | str | **required** | First gene ID |
-| **`--gene2`** | str | **required** | Second gene ID |
-| `--region1` | str | None | Highlighted region on first chromosome (e.g., `Chr1:1000-2000`) |
-| `--region2` | str | None | Highlighted region on second chromosome |
-| | | | |
-| *Single‑species mode* | | | |
-| `--gff` | str | None | GFF file for the genome |
-| `--fasta` | str | None | Genome FASTA file |
-| `--te_gff` | str | None | TE GFF file |
-| | | | |
-| *Cross‑species mode* | | | |
-| `--gff1` | str | None | GFF for species 1 |
-| `--gff2` | str | None | GFF for species 2 |
-| `--fasta1` | str | None | FASTA for species 1 |
-| `--fasta2` | str | None | FASTA for species 2 |
-| `--te_gff1` | str | None | TE GFF for species 1 |
-| `--te_gff2` | str | None | TE GFF for species 2 |
-| | | | |
-| *BLAST options* | | | |
-| `--evalue` | float | 1e-5 | BLAST e‑value threshold |
-| `--threads` | int | 8 | Number of BLAST threads |
-| `--extend` | int | 3000 | Bases to extend around each gene when extracting sequence |
-| `--blast_result` | str | None | Pre‑computed BLAST output (outfmt 6); if not given, BLAST is run automatically |
-| `--auto_complementary` | flag | False | Automatically reverse‑complement the second sequence if most BLAST hits are in opposite direction |
-| | | | |
-| *Plot appearance* | | | |
-| `--svg_width` | int | 2000 | SVG canvas width (pixels) |
-| `--svg_height` | int | 800 | SVG canvas height (pixels) |
-| `--svg_space` | float | 0.2 | Fraction of width used as left/right margins |
-| `--chro_thickness` | int | 15 | Thickness of chromosome rectangles |
-| `--label_font_size` | int | 18 | Font size for scale bar text |
-| `--chro_axis` | flag | False | Draw tick marks on chromosomes |
-| `--no_scale` | flag | False | Omit scale bar |
-| `--gap` | float | 0 | Gap between chromosome and homology polygons |
-| `--pos_label_x_offset` | float | 170 | X‑offset for position labels (chr:start-end) |
-| `--bezier` | flag | False | Use Bezier curves for homology ribbons (smoother) |
-| | | | |
-| *TE track options* | | | |
-| `--te_offset_base` | float | 15 | Base offset for TE motif labels |
-| `--te_offset_step` | float | 15 | Step increment to avoid overlapping TE labels |
-| `--te_track_height` | float | 12 | Height of TE rectangles |
-| `--te_track_offset` | float | 30 | Distance from chromosome to TE track |
-| | | | |
-| *Output* | | | |
-| `--output` | str | MicroSynViz_result | Prefix for all output files |
-| `--version` | flag | | Show version and exit |
-## 🚀 Usage Examples
-### Single‑species comparison
-Compare two genes in the same genome, with TE annotations, and let MicroSynViz run BLAST automatically:
+Chr1    MSU_osa1r7    gene    1000    2000    .    +    .    ID=LOC_Os01g01010;Name=...
+Chr1    MSU_osa1r7    mRNA    1000    2000    .    +    .    ID=LOC_Os01g01010.1;Parent=LOC_Os01g01010
+Chr1    MSU_osa1r7    exon    1000    1200    .    +    .    Parent=LOC_Os01g01010.1
+```
+
+### 2. Genome FASTA
+
+Must be indexed with `samtools faidx`:
+
 ```bash
-python Geneviz.py \
-    --gene1 GeneA --gene2 GeneB \
-    --gff species.gff \
-    --fasta genome.fasta \
+samtools faidx genome.fasta
+```
+
+### 3. TE Annotation GFF (optional)
+
+GFF3 with transposable element annotations. The `Name=` attribute is displayed as the TE label.
+
+### 4. BLAST Result (optional)
+
+If not provided, MicroSynViz runs BLASTN automatically. To provide pre-computed results, use BLAST tabular format (`-outfmt 6`):
+
+```bash
+blastn -query seq1.fa -subject seq2.fa -outfmt 6 -evalue 1e-5 > blast.txt
+```
+
+---
+
+## Quick Start
+
+### Single-species: Compare two genes
+
+```bash
+MicroSynViz \
+    --gene1 LOC_Os06g50440 \
+    --gene2 LOC_Os06g50789 \
+    --gff annotation.gff \
+    --fasta genome.fa \
     --te_gff TEs.gff \
     --auto_complementary \
+    --bezier \
     --output my_synteny
 ```
-Compare two regions in the same genome, with TE annotations, and let MicroSynViz run BLAST automatically:
+
+### Single-species: Compare two regions
+
 ```bash
-python Geneviz.py \
-    --region1 Chr1:1000-5000 --region2 Chr2 2000-6000 \
-    --gff species.gff \
-    --fasta genome.fasta \
+MicroSynViz \
+    --region1 Chr1:1000-5000 \
+    --region2 Chr2:3000-8000 \
+    --gff annotation.gff \
+    --fasta genome.fa \
     --te_gff TEs.gff \
+    --extend 5000 \
+    --output region_synteny
+```
+
+### Cross-species comparison
+
+```bash
+MicroSynViz \
+    --gene1 GeneA \
+    --gene2 GeneB \
+    --gff1 speciesA.gff \
+    --fasta1 speciesA.fa \
+    --gff2 speciesB.gff \
+    --fasta2 speciesB.fa \
+    --te_gff1 speciesA_te.gff \
+    --te_gff2 speciesB_te.gff \
     --auto_complementary \
-    --output my_synteny
+    --bezier \
+    --output cross_species_synteny
 ```
-### Cross‑species comparison
-Compare genes from two different species:
-```bash
-python genevis.py \
-    --gene1 GeneA --gene2 GeneB \
-    --gff1 species1.gff --fasta1 genome1.fasta \
-    --gff2 species2.gff --fasta2 genome2.fasta \
-    --te_gff1 TEs1.gff --te_gff2 TEs2.gff \
-    --output cross_species
-```
-Compare regions from two different species:
-```bash
-python genevis.py \
-    --region1 Chr1:1000-5000 --region2 Chr2 2000-6000 \
-    --gff1 species1.gff --fasta1 genome1.fasta \
-    --gff2 species2.gff --fasta2 genome2.fasta \
-    --te_gff1 TEs1.gff --te_gff2 TEs2.gff \
-    --output cross_species
-```
-## 📤 Output Files
+
+---
+
+## Command-line Options
+
+Run `MicroSynViz --help` to see all options.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--gene1` | str | — | Gene ID for region 1 |
+| `--gene2` | str | — | Gene ID for region 2 |
+| `--region1` | str | — | Genomic region (Chr:start-end) for region 1 |
+| `--region2` | str | — | Genomic region (Chr:start-end) for region 2 |
+| `--gff` | str | — | GFF3 annotation (single species) |
+| `--gff1` / `--gff2` | str | — | GFF3 annotations (cross-species) |
+| `--fasta` | str | — | Genome FASTA (single species) |
+| `--fasta1` / `--fasta2` | str | — | Genome FASTAs (cross-species) |
+| `--te_gff` | str | — | TE annotation GFF (single species) |
+| `--te_gff1` / `--te_gff2` | str | — | TE annotation GFFs (cross-species) |
+| `--blast_result` | str | — | Pre-computed BLAST result (skip auto-BLAST) |
+| `--extend` | int | 50000 | Flanking extension in bp |
+| `--evalue` | float | 1e-5 | BLAST e-value threshold |
+| `--threads` | int | 4 | BLAST threads |
+| `--min_identity` | float | 0 | Minimum BLAST identity % |
+| `--min_length` | int | 0 | Minimum alignment length |
+| `--auto_complementary` | flag | — | Auto-detect reverse complement |
+| `--bezier` | flag | — | Use Bezier curves for ribbons |
+| `--output` | str | MicroSynViz_result | Output file prefix |
+
+---
+
+## Output Files
+
 All output files are named with the prefix given by `--output` (default: `MicroSynViz_result`).
+
 | File | Description |
 |------|-------------|
-| `{prefix}_linkview.svg` | Vector graphic (SVG) of the synteny plot. |
-| `{prefix}_linkview.pdf` | PDF version (converted from SVG). |
-| `{prefix}_genes.fasta` | Extracted sequences for the two genes (with flanking regions). |
-| `{prefix}_blast.txt` | BLAST results used for plotting (tabular format). |
-## 📝 Citation
-If you use MicroSynViz in your research, please cite:
+| `*_linkview.svg` | Vector SVG figure |
+| `*_linkview.pdf` | Vector PDF figure (converted from SVG) |
+| `*_genes.fasta` | Extracted gene sequences |
+| `*_blast.txt` | BLAST tabular results |
+
+---
+
+## Examples
+
+Example data and expected outputs are provided in the `example-test/` directory:
+
+- **Single-species**: `example-test/Single-species_comparison/`
+- **Cross-species**: `example-test/Cross-species_comparison/`
+
+To run an example:
+
+```bash
+cd example-test/Single-species_comparison
+bash run_example.sh
 ```
 
-```
-## 📄 License
-MicroSynViz is released under the MIT License. See `LICENSE` for details.
+---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.

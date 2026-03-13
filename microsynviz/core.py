@@ -48,7 +48,7 @@ from Bio import SeqIO
 from io import StringIO
 import pandas as pd
 
-__version__ = "1.1.0"  # Updated version with region mode
+__version__ = "1.0.0"  # Updated version with region mode
 
 # -------------------------- XML escaping for SVG text -------------------------
 def xml_escape(s):
@@ -143,7 +143,7 @@ def parse_attributes(attr):
             contentFlag = not contentFlag
         elif c == ';' and not contentFlag:
             item = attr[lastPos:i]
-            tmpArr = item.split('=')
+            tmpArr = item.split('=', 1)
             key = tmpArr[0]
             val = tmpArr[1].strip(' "') if len(tmpArr) >= 2 else None
             res[key] = val
@@ -1078,7 +1078,7 @@ def main():
     global args, scale
     parser = argparse.ArgumentParser(
         description="MicroSynViz: Visualize Pairwise Genomic Microsynteny",
-        epilog="For detailed documentation, see https://github.com/yourusername/GeneViz"
+        epilog="For detailed documentation, see https://github.com/YiyongZhao/MicroSynViz"
     )
     # Two mutually exclusive input modes: gene IDs or genomic regions
     parser.add_argument("--gene1", help="Gene ID for the first gene (required if --region1 not used)")

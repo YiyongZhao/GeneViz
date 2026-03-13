@@ -3,7 +3,7 @@ message: "If you use MicroSynViz, please cite it as below."
 type: software
 title: "MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species"
 version: 1.0.0
-date-released: "2026-03-01"
+date-released: "2026-03-13"
 license: MIT
 repository-code: "https://github.com/YiyongZhao/MicroSynViz"
 authors:

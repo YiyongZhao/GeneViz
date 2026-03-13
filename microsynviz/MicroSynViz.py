@@ -21,40 +21,44 @@ GitHub:  https://github.com/YiyongZhao/MicroSynViz
 Contact: yiyong.zhao@yale.edu
 """
 
-MODULES = [
-    "LinkView_Visualizer",
-    "MicroSynteny_Plotter",
-    "GD_Classifier",
-    "TE_Annotator",
-]
+from microsynviz import __version__
 
 def main():
     print(LOGO)
+
+    # If no args or first arg looks like a direct flag (--gene1, --region1, etc.),
+    # run the core LinkView visualizer directly
+    if len(sys.argv) > 1 and sys.argv[1].startswith('--'):
+        from microsynviz.core import main as core_main
+        core_main()
+        return
+
     parser = argparse.ArgumentParser(
         description="MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species",
-        usage="MicroSynViz <module> [options]"
+        usage="MicroSynViz [--gene1/--region1 ...] or MicroSynViz <module> [options]"
     )
     parser.add_argument(
         "module",
         nargs="?",
-        choices=MODULES,
-        help="Module to run: " + " | ".join(MODULES)
+        choices=["LinkView_Visualizer", "MicroSynteny_Plotter", "GD_Classifier", "TE_Annotator"],
+        help="Module to run (or pass --gene1/--region1 directly for LinkView visualization)"
     )
-    parser.add_argument("--version", action="version", version="MicroSynViz 1.0.0")
+    parser.add_argument("--version", action="version", version=f"MicroSynViz {__version__}")
 
     args, remaining = parser.parse_known_args()
 
     if args.module is None:
         parser.print_help()
-        print("\nAvailable modules:")
-        for m in MODULES:
-            print(f"  MicroSynViz {m} --help")
+        print(f"\nDirect usage (most common):")
+        print(f"  MicroSynViz --gene1 GeneA --gene2 GeneB --gff annotation.gff --fasta genome.fa")
+        print(f"\nModule usage:")
+        print(f"  MicroSynViz LinkView_Visualizer --help")
         sys.exit(0)
 
-    # Dispatch to module
     if args.module == "LinkView_Visualizer":
-        from microsynviz.LinkView_Visualizer import run
-        run(remaining)
+        from microsynviz.core import main as core_main
+        sys.argv = [sys.argv[0]] + remaining
+        core_main()
     elif args.module == "MicroSynteny_Plotter":
         from microsynviz.MicroSynteny_Plotter import run
         run(remaining)
