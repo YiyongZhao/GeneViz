@@ -11,8 +11,6 @@
 - SVG and PDF vector output via CairoSVG
 - Bezier curve rendering for homology ribbons
 
-### Planned (future releases)
-
 - `MicroSynteny_Plotter`: Batch processing of multiple gene pairs
 - `GD_Classifier`: Automated classification of gene duplication types
 - `TE_Annotator`: TE family annotation overlay

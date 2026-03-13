@@ -1,6 +1,6 @@
 # LinkView_Visualizer Example Data
 
-This directory contains example input files for `MicroSynViz LinkView_Visualizer`.
+This directory contains example input files for `MicroSynViz`.
 
 ## Files
 
@@ -12,7 +12,7 @@ This directory contains example input files for `MicroSynViz LinkView_Visualizer
 ## Usage
 
 ```bash
-MicroSynViz LinkView_Visualizer \
+MicroSynViz \
     --input_pairs gene_pairs.tsv \
     --lens_a speciesA.lens
 ```
