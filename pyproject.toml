@@ -24,10 +24,6 @@ dependencies = [
   "cairosvg",
 ]
 
-[project.optional-dependencies]
-plot = ["numpy", "scipy", "matplotlib>=3.5"]
-dev = ["pytest"]
-
 [project.scripts]
 MicroSynViz = "microsynviz.MicroSynViz:main"
 
