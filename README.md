@@ -284,6 +284,7 @@ Run `MicroSynViz --help` to see all options.
 | `--chro_axis` | flag | — | Draw tick marks on chromosome bars |
 | `--no_scale` | flag | — | Omit the scale bar |
 | `--output` | str | MicroSynViz_result | Output file prefix |
+| `--SVG_plot` | flag | — | Generate SVG file (by default only PDF is produced) |
 | `--quiet` / `-q` | flag | — | Suppress informational output (warnings/errors only) |
 
 ---
