@@ -48,7 +48,7 @@ Unlike genome-wide synteny tools (MCScanX, SynVisio, JupiterPlot), MicroSynViz f
 | Gene structure (exon/intron) | No | No | **Yes** |
 | TE track overlay | No | No | **Yes** |
 | Auto BLAST + visualize | No | No | **Yes** |
-| Publication-ready vector output | No | Screenshot | **SVG + PDF** |
+| Publication-ready vector output | No | Screenshot | **PDF / SVG** |
 | One-command workflow | No | No | **Yes** |
 
 ---
@@ -62,7 +62,7 @@ Unlike genome-wide synteny tools (MCScanX, SynVisio, JupiterPlot), MicroSynViz f
 - **Automatic reverse complement** detection based on BLAST alignment orientation
 - **Flexible ribbon coloring**: color by bitscore, identity, or e-value (`--color_by`)
 - **BLAST filtering**: minimum identity and alignment length thresholds
-- **SVG and PDF output** (vector graphics via CairoSVG)
+- **PDF or SVG output** (vector graphics via CairoSVG)
 - **Bezier curve** rendering for smooth homology ribbons
 
 ---
@@ -283,14 +283,8 @@ Run `MicroSynViz --help` to see all options.
 | `--ribbon_opacity` | float | 0.2 | Opacity of BLAST ribbons (0=invisible, 1=opaque) |
 | `--svg_width` | float | 2000 | SVG canvas width in virtual units |
 | `--svg_height` | float | 800 | SVG canvas height in virtual units |
-| `--chro_thickness` | float | 15 | Thickness of chromosome bar (virtual units) |
 | `--chro_axis` | flag | — | Draw tick marks on chromosome bars |
 | `--no_scale` | flag | — | Omit the scale bar |
-| `--gap` | float | 0 | Gap between chromosome bar and ribbons |
-| `--te_track_height` | float | 12 | Height of TE annotation rectangles |
-| `--te_track_offset` | float | 30 | Distance from chromosome bar to TE track |
-| `--svg_width` | int | 2000 | SVG canvas width |
-| `--svg_height` | int | 800 | SVG canvas height |
 | `--output` | str | MicroSynViz_result | Output file prefix |
 | `--quiet` / `-q` | flag | — | Suppress informational output (warnings/errors only) |
 
