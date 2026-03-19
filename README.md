@@ -311,10 +311,13 @@ Run `MicroSynViz --help` to see all options.
 Example data is provided in `example-test/`:
 
 - **Single-species**: `example-test/Single-species_comparison/`
-- **Cross-species**: `example-test/Cross-species_comparison/`
-
 ```bash
 cd example-test/Single-species_comparison
+bash run_example.sh
+```
+- **Cross-species**: `example-test/Cross-species_comparison/`
+```bash
+cd example-test/Cross-species_comparison
 bash run_example.sh
 ```
 
