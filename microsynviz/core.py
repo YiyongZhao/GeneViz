@@ -20,7 +20,7 @@ Dependencies:
     Python 3.8+
     BioPython
     pandas
-    cairosvg
+    cairosvg (optional — required for PDF output; SVG works without it)
     samtools (command-line)
     blastn (command-line)
 
@@ -58,7 +58,6 @@ import argparse
 import subprocess
 import re
 import math
-import cairosvg
 from Bio import SeqIO
 from io import StringIO
 import pandas as pd
@@ -1789,11 +1788,20 @@ def main():
             f.write(svg_content)
         log(f"[INFO] SVG file generated: {svg_file}\n")
 
-    # Convert SVG to PDF using cairosvg (always produce PDF)
+    # Convert SVG to PDF using cairosvg (lazy import — tool works without cairo for SVG-only mode)
     pdf_file = f"{args.output}_linkview.pdf"
     try:
+        import cairosvg
         cairosvg.svg2pdf(bytestring=svg_content.encode('utf-8'), write_to=pdf_file)
         log(f"[INFO] PDF generated: {pdf_file}\n")
+    except ImportError:
+        logger.warning("[WARNING] cairosvg not available — PDF output skipped. "
+                       "Install cairo: conda install -c conda-forge cairo cairosvg")
+        # Auto-save SVG as fallback if PDF generation fails
+        if not args.SVG_plot:
+            with open(svg_file, 'w', encoding='utf-8') as f:
+                f.write(svg_content)
+            log(f"[INFO] SVG saved as fallback: {svg_file}\n")
     except Exception as e:
         logger.warning(f"[WARNING] Failed to convert SVG to PDF: {e}")
 
