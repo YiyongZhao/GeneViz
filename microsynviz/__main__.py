@@ -1,2 +1,2 @@
-from microsynviz.MicroSynViz import main
+from microsynviz.core import main
 main()

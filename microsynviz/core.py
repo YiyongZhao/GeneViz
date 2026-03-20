@@ -1375,9 +1375,33 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
 
     return svg_content
 
+# -------------------------- CLI Banner --------------------------
+LOGO = r"""
+###############################################################################################
+ ███╗   ███╗██╗ ██████╗██████╗  ██████╗ ███████╗██╗   ██╗███╗   ██╗██╗   ██╗██╗███████╗
+ ████╗ ████║██║██╔════╝██╔══██╗██╔═══██╗██╔════╝╚██╗ ██╔╝████╗  ██║██║   ██║██║╚══███╔╝
+ ██╔████╔██║██║██║     ██████╔╝██║   ██║███████╗ ╚████╔╝ ██╔██╗ ██║██║   ██║██║  ███╔╝
+ ██║╚██╔╝██║██║██║     ██╔══██╗██║   ██║╚════██║  ╚██╔╝  ██║╚██╗██║╚██╗ ██╔╝██║ ███╔╝
+ ██║ ╚═╝ ██║██║╚██████╗██║  ██║╚██████╔╝███████║   ██║   ██║ ╚████║ ╚████╔╝ ██║███████╗
+ ╚═╝     ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚══════╝
+###############################################################################################
+MicroSynViz: Visualizing Pairwise Genomic Microsynteny Within and Between Species
+GitHub:  https://github.com/YiyongZhao/MicroSynViz
+Contact: yiyong.zhao@yale.edu
+"""
+
 # -------------------------- Main Function --------------------------
 def main():
     global args, scale
+
+    # Print banner on --version, --help, or no arguments
+    if '--version' in sys.argv:
+        print(LOGO)
+        print(f"MicroSynViz {__version__}")
+        return
+    if len(sys.argv) == 1 or '--help' in sys.argv or '-h' in sys.argv:
+        print(LOGO)
+
     parser = argparse.ArgumentParser(
         description="MicroSynViz: Visualize Pairwise Genomic Microsynteny",
         epilog="For detailed documentation, see https://github.com/YiyongZhao/MicroSynViz"
