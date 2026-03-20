@@ -471,7 +471,7 @@ def parse_annotation(filepath, source_order=0):
         try:
             parse_gene_gff(filepath)
         except Exception as e:
-            sys.stderr.write(f"  [WARNING] Gene parsing failed for {filepath}: {e}\n")
+            logger.warning(f"  [WARNING] Gene parsing failed for {filepath}: {e}")
         try:
             parse_te_gff(filepath, source_order=source_order)
         except Exception:
@@ -1399,7 +1399,7 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
     # Assemble SVG — physical size = A4 width (595.28pt), viewBox = virtual coords
     phys_w = 595.28
     phys_h = phys_w * args.svg_height / args.svg_width
-    svg_content = f'<svg width="{phys_w}pt" height="{phys_h:.1f}pt\" viewBox=\"0 0 {args.svg_width} {args.svg_height}" xmlns="http://www.w3.org/2000/svg" version="1.1">'
+    svg_content = f'<svg width="{phys_w}pt" height="{phys_h:.1f}pt" viewBox="0 0 {args.svg_width} {args.svg_height}" xmlns="http://www.w3.org/2000/svg" version="1.1">'
     svg_content += ''.join(svg_content_parts)
     svg_content += '</svg>'
 
@@ -1537,7 +1537,7 @@ def main():
         raise InputError("You must provide either --gene1 and --gene2, or --region1 and --region2.")
 
     if gene_mode and region_mode:
-        sys.stderr.write("[WARNING] Both gene IDs and regions provided. Using gene IDs.\n")
+        logger.warning("[WARNING] Both gene IDs and regions provided. Using gene IDs.")
         # Override: use gene mode
         region_mode = False
 
@@ -1745,7 +1745,8 @@ def main():
             with open(seq_fasta, "w", encoding="utf-8") as f:
                 f.write(seq1 + "\n")
                 f.write(seq2 + "\n")
-            # Re-run BLAST
+            # Re-run BLAST (reset output path to avoid overwriting user-provided file)
+            blast_out = f"{args.output}_blast.txt"
             log("[Step 3b/4] Re-running BLASTn with reversed sequence...\n")
             run_blastn(seq_fasta, blast_out, args.evalue, args.threads)
             blast_hits = parse_blast_results(blast_out, min_identity=args.identity, min_length=args.alignment_length)   # update
@@ -1805,7 +1806,7 @@ def main():
         cairosvg.svg2pdf(bytestring=svg_content.encode('utf-8'), write_to=pdf_file)
         log(f"[INFO] PDF generated: {pdf_file}\n")
     except Exception as e:
-        sys.stderr.write(f"[WARNING] Failed to convert SVG to PDF: {e}\n")
+        logger.warning(f"[WARNING] Failed to convert SVG to PDF: {e}")
 
     log("\n[✅ Analysis Completed Successfully]\n")
     log(f"1. Gene sequences: {seq_fasta}\n")

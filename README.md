@@ -280,7 +280,7 @@ Run `MicroSynViz --help` to see all options.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `--bezier` | flag | — | Use Bezier curves for smooth homology ribbons |
-| `--ribbon_opacity` | float | 0.2 | Opacity of BLAST ribbons (0=invisible, 1=opaque) |
+| `--ribbon_opacity` | float | 0.1 | Opacity of BLAST ribbons (0=invisible, 1=opaque) |
 | `--chro_axis` | flag | — | Draw tick marks on chromosome bars |
 | `--no_scale` | flag | — | Omit the scale bar |
 | `--output` | str | MicroSynViz_result | Output file prefix |
