@@ -46,7 +46,7 @@ Unlike genome-wide synteny tools (MCScanX, SynVisio, JupiterPlot), MicroSynViz f
 |---------|---------|----------|-------------|
 | Scale | Genome-wide | Genome-wide | Gene-pair level |
 | Gene structure (exon/intron) | No | No | **Yes** |
-| TE track overlay | No | No | **Yes** |
+| Multi-track overlay | No | No | **Yes** |
 | Auto BLAST + visualize | No | No | **Yes** |
 | Publication-ready vector output | No | Screenshot | **PDF / SVG** |
 | One-command workflow | No | No | **Yes** |
