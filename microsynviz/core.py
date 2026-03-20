@@ -271,6 +271,8 @@ def parse_gene_gff(gff_file):
             elif feat in mRNA_type_name_set:
                 if 'Parent' not in att:
                     # If mRNA lacks Parent, treat as gene itself
+                    if att.get('ID') is None:
+                        continue
                     gene_id = f"{att['ID']}_gene"
                     gene_info.setdefault(gene_id, {})
                     gene_info[gene_id]['chro'] = seqid
@@ -465,7 +467,7 @@ def parse_annotation(filepath, source_order=0):
     logger.info(f"  {filepath} [detected: {fmt.upper()}, layer={source_order}]\n")
     if fmt == 'bed':
         parse_bed_genes(filepath)
-        parse_bed_te(filepath, source_order=source_order)
+        # BED format lacks feature type info — only parse as genes, not TEs
     else:
         # GFF/GTF: try both gene and TE parsing
         try:
@@ -474,8 +476,8 @@ def parse_annotation(filepath, source_order=0):
             logger.warning(f"  [WARNING] Gene parsing failed for {filepath}: {e}")
         try:
             parse_te_gff(filepath, source_order=source_order)
-        except Exception:
-            pass  # Not all GFFs have TE features
+        except Exception as e:
+            logger.debug(f"  TE parsing skipped for {filepath}: {e}")
 
 
 def extract_gene_from_bed(gene_id, bed_file):
@@ -518,7 +520,7 @@ def _find_gene_in_annos(gene_id, anno_files):
                         parts = line.strip().split('\t')
                         if len(parts) != 9:
                             continue
-                        if parts[2] != 'gene':
+                        if parts[2].lower() != 'gene':
                             continue
                         att = parse_attributes(parts[8])
                         if (att.get('ID') == gene_id or att.get('Name') == gene_id or
@@ -527,35 +529,6 @@ def _find_gene_in_annos(gene_id, anno_files):
         except Exception:
             continue
     return None
-
-
-def extract_gene_coordinates(gene_id, anno_file):
-    """Extract gene coordinates from GFF3, GTF, or BED file."""
-    check_file_exists(anno_file)
-    fmt = detect_format(anno_file)
-    if fmt == 'bed':
-        result = extract_gene_from_bed(gene_id, anno_file)
-        if result:
-            return result
-        raise GeneNotFoundError(f"Gene '{gene_id}' not found in BED file {anno_file}")
-    # GFF/GTF
-    with open(anno_file, 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            parts = line.strip().split('\t')
-            if len(parts) != 9:
-                continue
-            if parts[2] != 'gene':
-                continue
-            att = parse_attributes(parts[8])
-            match = (att.get('ID') == gene_id or
-                     att.get('Name') == gene_id or
-                     att.get('gene_id') == gene_id or
-                     att.get('gene_name') == gene_id)
-            if match:
-                return parts[0], int(parts[3]), int(parts[4]), parts[6]
-    raise GeneNotFoundError(f"Gene '{gene_id}' not found in {anno_file}")
 
 
 
@@ -712,7 +685,7 @@ def parse_region(region_str):
 def generate_svg(gene1, gene2, len1, len2, blast_hits,
                  seq1_start, seq1_end, seq2_start, seq2_end,
                  chr1, chr2, out_prefix, bezier=False, target_set=None,
-                 core_ranges=None, revcomp2=False):
+                 core_range1=None, core_range2=None, revcomp2=False):
     """
     Generate SVG visualization of synteny.
     Returns the SVG content as a string.
@@ -1259,9 +1232,6 @@ def generate_svg(gene1, gene2, len1, len2, blast_hits,
         if target_set is None:
             target_set = {gene1, gene2}
 
-        core_range1 = core_ranges.get(chr1, None) if core_ranges else None
-        core_range2 = core_ranges.get(chr2, None) if core_ranges else None
-
         svg_content_parts.append(draw_all_gene_structures(chr1, chro1, target_set, core_range1, revcomp=False))
         svg_content_parts.append(draw_all_gene_structures(chr2, chro2, target_set, core_range2, revcomp2))
 
@@ -1486,27 +1456,17 @@ def main():
     args = parser.parse_args()
     scale = 1.0
 
-    # Set default values for removed parameters (hard-coded to original defaults)
-    if not hasattr(args, 'svg_width'):
-        args.svg_width = 2000
-    if not hasattr(args, 'svg_height'):
-        args.svg_height = 800
-    if not hasattr(args, 'chro_thickness'):
-        args.chro_thickness = 15
-    if not hasattr(args, 'gap'):
-        args.gap = 0
-    if not hasattr(args, 'te_track_height'):
-        args.te_track_height = 12
-    if not hasattr(args, 'te_track_offset'):
-        args.te_track_offset = 30
-    if not hasattr(args, 'svg_space'):
-        args.svg_space = 0.2
-    if not hasattr(args, 'pos_label_x_offset'):
-        args.pos_label_x_offset = 170
-    if not hasattr(args, 'te_offset_base'):
-        args.te_offset_base = 15
-    if not hasattr(args, 'te_offset_step'):
-        args.te_offset_step = 15
+    # Fixed internal layout parameters (not exposed as CLI options)
+    args.svg_width = 2000
+    args.svg_height = 800
+    args.chro_thickness = 15
+    args.gap = 0
+    args.te_track_height = 12
+    args.te_track_offset = 30
+    args.svg_space = 0.2
+    args.pos_label_x_offset = 170
+    args.te_offset_base = 15
+    args.te_offset_step = 15
 
     # Reset global state (safety for repeated calls / testing)
     global gene_info, mRNA_info, te_info
@@ -1514,11 +1474,13 @@ def main():
     mRNA_info = {}
     te_info = []
 
-    # Setup logging
-    if args.quiet:
-        logging.basicConfig(level=logging.WARNING, format="%(message)s")
-    else:
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    # Setup logging — configure logger directly (basicConfig may not work if
+    # logging was already configured by another package)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(handler)
+    logger.setLevel(logging.WARNING if args.quiet else logging.DEBUG)
 
     def log(msg):
         """Log informational messages (respects --quiet)."""
@@ -1769,10 +1731,12 @@ def main():
                 if g_start <= end2 and g_end >= start2:
                     target_genes.add(gid)
         log(f"[Info] {len(target_genes)} genes found overlapping the specified regions and will be highlighted in red.\n")
-        core_ranges = {chr1: (start1, end1), chr2: (start2, end2)}
+        core_range1 = (start1, end1)
+        core_range2 = (start2, end2)
     else:
         target_genes = None
-        core_ranges = None
+        core_range1 = None
+        core_range2 = None
 
     seq_lengths = read_sequence_lengths(seq_fasta)
     len1 = seq_lengths[gene1_display]
@@ -1789,7 +1753,8 @@ def main():
         out_prefix=args.output,
         bezier=args.bezier,
         target_set=target_genes,
-        core_ranges=core_ranges,
+        core_range1=core_range1,
+        core_range2=core_range2,
         revcomp2=revcomp2
     )
 
