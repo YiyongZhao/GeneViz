@@ -168,7 +168,7 @@ class Chro():
 
     def coordinate(self, pos, is_up, is_start=False):
         """Convert genomic position to SVG coordinates."""
-        if self.left and self.right and self.top:
+        if self.left is not None and self.right is not None and self.top is not None:
             if is_up:
                 y = self.top
             else:
